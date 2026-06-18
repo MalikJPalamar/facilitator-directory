@@ -14,9 +14,7 @@
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
     "skipLibCheck": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "composite": false
+    "allowImportingTsExtensions": true,
+    "noEmit": true
   }
 }
