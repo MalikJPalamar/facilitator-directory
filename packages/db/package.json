@@ -15,6 +15,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@directory/ai": "workspace:*",
     "@directory/config": "workspace:*",
     "drizzle-orm": "^0.38.3",
     "postgres": "^3.4.5"
