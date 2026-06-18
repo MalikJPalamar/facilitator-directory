@@ -1,4 +1,4 @@
-import { db, eq, queryClient, tables } from "@directory/db";
+import { and, db, eq, queryClient, tables } from "@directory/db";
 import { runInsightForProfile, runInsightForSchool } from "@directory/core";
 
 /**
@@ -29,7 +29,12 @@ export async function runNightly(now = new Date()): Promise<void> {
         name: tables.graduateProfile.displayName,
       })
       .from(tables.graduateProfile)
-      .where(eq(tables.graduateProfile.status, "published"));
+      .where(
+        and(
+          eq(tables.graduateProfile.organizationId, org.id),
+          eq(tables.graduateProfile.status, "published"),
+        ),
+      );
 
     for (const p of profiles) {
       const r = await runInsightForProfile({

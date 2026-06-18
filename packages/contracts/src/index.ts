@@ -42,13 +42,26 @@ export const ProfileDetail = ProfileSummary.extend({
 });
 export type ProfileDetail = z.infer<typeof ProfileDetail>;
 
+/**
+ * Query-string boolean. `z.coerce.boolean()` is JS-truthiness based, so the
+ * string "false" coerces to `true`; here only explicit truthy tokens enable the
+ * flag, and "false"/"0"/"no" correctly disable it.
+ */
+const booleanFlag = z
+  .preprocess((v) => {
+    if (typeof v === "boolean") return v;
+    if (typeof v === "string") return ["1", "true", "yes", "on"].includes(v.toLowerCase());
+    return v;
+  }, z.boolean())
+  .optional();
+
 export const SearchQuery = z.object({
   q: z.string().optional(),
   modality: z.string().optional(),
   lat: z.coerce.number().optional(),
   lng: z.coerce.number().optional(),
   radiusKm: z.coerce.number().default(50),
-  online: z.coerce.boolean().optional(),
+  online: booleanFlag,
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(50).default(20),
 });

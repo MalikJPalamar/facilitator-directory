@@ -15,6 +15,10 @@ import postgres from "postgres";
  * application role so tenant isolation is actually enforced for the app.
  */
 
+// Tables with a direct `organization_id` column get a tenant-isolation RLS
+// policy. `incentive_score` is intentionally excluded: it has no
+// organization_id (it references graduate_profile, which is itself tenant-scoped,
+// so it's protected transitively). Add it back only if it gains a tenant column.
 const ORG_SCOPED_TABLES = [
   "graduate_profile",
   "location",
@@ -24,7 +28,6 @@ const ORG_SCOPED_TABLES = [
   "analytics_event",
   "insight",
   "review_item",
-  "incentive_score",
   "ad_placement",
 ];
 

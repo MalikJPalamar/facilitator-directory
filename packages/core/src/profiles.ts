@@ -37,6 +37,8 @@ export async function getProfileDetail(
       and(
         eq(tables.graduateProfile.organizationId, organizationId),
         eq(tables.graduateProfile.slug, slug),
+        // Public path: never expose draft/hidden profiles by guessable slug.
+        eq(tables.graduateProfile.status, "published"),
       ),
     )
     .limit(1);
