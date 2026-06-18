@@ -1,0 +1,16 @@
+{
+  "name": "@directory/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "lint": "echo 'no lint'", "typecheck": "tsc --noEmit" },
+  "dependencies": {
+    "@directory/ai": "workspace:*",
+    "@directory/analytics": "workspace:*",
+    "@directory/contracts": "workspace:*",
+    "@directory/db": "workspace:*",
+    "drizzle-orm": "^0.38.3"
+  },
+  "devDependencies": { "typescript": "^5.7.2" }
+}

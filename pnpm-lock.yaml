@@ -37,11 +37,56 @@ importers:
         specifier: ^5.7.2
         version: 5.9.3
 
+  packages/analytics:
+    dependencies:
+      '@directory/config':
+        specifier: workspace:*
+        version: link:../config
+      '@directory/db':
+        specifier: workspace:*
+        version: link:../db
+    devDependencies:
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
   packages/config:
     dependencies:
       zod:
         specifier: ^3.24.1
         version: 3.25.76
+    devDependencies:
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  packages/contracts:
+    dependencies:
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
+    devDependencies:
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  packages/core:
+    dependencies:
+      '@directory/ai':
+        specifier: workspace:*
+        version: link:../ai
+      '@directory/analytics':
+        specifier: workspace:*
+        version: link:../analytics
+      '@directory/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      '@directory/db':
+        specifier: workspace:*
+        version: link:../db
+      drizzle-orm:
+        specifier: ^0.38.3
+        version: 0.38.4(postgres@3.4.9)
     devDependencies:
       typescript:
         specifier: ^5.7.2
