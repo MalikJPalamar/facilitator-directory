@@ -4,6 +4,8 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import postgres from "postgres";
 
+import { sslFor } from "./ssl.ts";
+
 /**
  * One command provisions everything: extensions → tables → RLS.
  *
@@ -32,7 +34,10 @@ const ORG_SCOPED_TABLES = [
 ];
 
 async function main() {
-  const client = postgres(env.DATABASE_URL, { max: 1 });
+  const client = postgres(env.DATABASE_URL, {
+    max: 1,
+    ssl: sslFor(env.DATABASE_URL),
+  });
   const db = drizzle(client);
 
   console.log("→ enabling extensions (postgis, vector, pg_trgm)…");

@@ -1,5 +1,5 @@
 {
-  "id": "27441c08-9f22-408c-91ad-2342ce4f8c98",
+  "id": "d8e2298c-a72e-43e6-b77a-b50e84a2b635",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -1107,7 +1107,7 @@
         },
         "geog": {
           "name": "geog",
-          "type": "geography(Point,4326)",
+          "type": "geography",
           "primaryKey": false,
           "notNull": false
         },

@@ -28,22 +28,25 @@ Monorepo, schema + RLS, Claude gateway + offline insight engine, REST/OpenAPI,
 MCP server, web app, billing scaffold, ecosystem adapters, PRD + business model.
 **Exit criteria met:** all packages typecheck, API serves non-DB routes, evals pass.
 
-### 🔜 M1 — Runtime Green — **T+7d · 2026-06-26**
+### 🟢 M1 — Runtime Green — **T+7d · 2026-06-26** — _validated live 2026-06-19_
 Prove the slice runs end-to-end against real infrastructure.
-- [ ] `pnpm infra:up` → Postgres (PostGIS + pgvector) + Typesense healthy
-- [ ] `pnpm db:migrate && pnpm db:seed` succeed on a clean DB (validates the RLS pass — the fix from PR #1's review)
-- [ ] `pnpm intelligence:nightly` runs the SENSE→…→LEARN loop against seeded data; v2 scores v1
-- [ ] **CI workflow** (GitHub Actions): typecheck + build + evals on every PR — the green status check we don't yet have
-- [ ] `pnpm --filter @directory/ai evals` wired into CI
-**Exit:** a fresh `git clone` reaches a working local stack via documented commands, and CI is green.
+- [x] `pnpm infra:up` → Postgres (PostGIS + pgvector) + Typesense healthy _(fixed: combined PostGIS+pgvector image in `docker/postgres`)_
+- [x] `pnpm db:migrate && pnpm db:seed` succeed on a clean DB — RLS pass applies; 8 graduates + 2,174 events seeded _(fixed: geography typmod quoting in the generated DDL)_
+- [x] `pnpm intelligence:nightly` runs the SENSE→…→LEARN loop; v1→v2 with v1 scored **improved (+40)** after injected activity
+- [x] Live API: semantic search (pgvector) + geo search (PostGIS) + JSON-LD verified
+- [x] RLS isolation verified: no tenant → 0 rows, tenant set → 8 rows
+- [x] **CI workflow** (GitHub Actions): typecheck + build + evals on every PR (PR #2)
+**Exit:** a fresh `git clone` reaches a working local stack via documented commands — **met**. (Remaining: confirm CI run goes green on this PR.)
 
-### M2 — Deployed Internal Alpha — **T+14d · 2026-07-03**
-- [ ] Provision hosted Postgres (Supabase) + deploy API/worker/web (Render `render.yaml` / Vercel)
-- [ ] One real school's catalog seeded (anonymized if needed)
+### M2 — Deployed Internal Alpha — **T+14d · 2026-07-03** — _data tier live 2026-06-19_
+- [x] **Hosted Postgres on Neon** (eu-central-1): migrate + RLS + app role; SSL-aware client. Seeded (8 graduates, ~2.2k events) and the **nightly loop ran against Neon** (9 insights, search verified). _M2a done._
+- [ ] Deploy compute (web/api; mcp/worker) — host TBD: single Vercel app with embedded API, or web→Vercel + api→Render (`render.yaml`)
 - [ ] MCP server reachable by an **external agent** over streamable HTTP (the agents-as-customers proof)
 - [ ] Auth end-to-end (login → tenant-scoped dashboard)
 - [ ] Analytics events landing in the durable stream + (optional) PostHog
+- [ ] Nightly loop scheduled as infra cron against the hosted DB
 **Exit:** the founder can demo search + a profile + the AI coaching dashboard from a public URL.
+**Note:** no connected MCP can set Vercel/host env secrets — `DATABASE_URL` + `ANTHROPIC_API_KEY` are set once by the founder in the host dashboard.
 
 ### M3 — Design-Partner Prototype / Private Beta — **T+28d · 2026-07-17** _(T-prototype)_
 - [ ] 1–3 design-partner schools onboarded with real graduates

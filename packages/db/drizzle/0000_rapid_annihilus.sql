@@ -151,7 +151,7 @@ CREATE TABLE "location" (
 	"organization_id" text NOT NULL,
 	"profile_id" uuid NOT NULL,
 	"label" text,
-	"geog" "geography(Point,4326)",
+	"geog" "geography",
 	"city" text,
 	"region" text,
 	"country" text,

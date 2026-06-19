@@ -37,7 +37,12 @@ export const geographyPoint = customType<{
   driverData: string;
 }>({
   dataType() {
-    return "geography(Point,4326)";
+    // Plain `geography` (no typmod): drizzle-kit quotes any type containing
+    // parens — `"geography(Point,4326)"` — which Postgres then can't resolve.
+    // Point + SRID 4326 are enforced at write time via
+    // ST_SetSRID(ST_MakePoint(lng,lat),4326)::geography, so a plain geography
+    // column is functionally equivalent for ST_DWithin / ST_Distance + GiST.
+    return "geography";
   },
   toDriver(value: { lng: number; lat: number }): string {
     return `SRID=4326;POINT(${value.lng} ${value.lat})`;
