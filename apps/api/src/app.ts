@@ -57,6 +57,31 @@ app.get("/docs", (c) =>
 );
 app.get("/health", (c) => c.json({ ok: true }));
 
+// ── TEMP diagnostic: secret-safe fingerprint of DATABASE_URL (remove after M2) ──
+app.get("/_diag/db", (c) => {
+  const raw = process.env.DATABASE_URL ?? "";
+  const post = env.DATABASE_URL;
+  const fp = (s: string) => {
+    let parsed: string;
+    try {
+      const u = new URL(s);
+      parsed = `ok host=${u.hostname} proto=${u.protocol} hasPwd=${!!u.password}`;
+    } catch (e) {
+      parsed = `THROWS: ${(e as Error).message}`;
+    }
+    return {
+      len: s.length,
+      scheme: s.slice(0, Math.max(0, s.indexOf("://"))) || "(none)",
+      leadingChar: JSON.stringify(s.slice(0, 1)),
+      trailingChar: JSON.stringify(s.slice(-1)),
+      hasSpace: /\s/.test(s),
+      hasNewline: /[\r\n]/.test(s),
+      newUrl: parsed,
+    };
+  };
+  return c.json({ raw: fp(raw), postUnquote: fp(post) });
+});
+
 // ── Public directory ──────────────────────────────────────────────────────────
 app.get("/v1/schools/:slug", async (c) => {
   const school = await getSchoolBySlug(c.req.param("slug"));
