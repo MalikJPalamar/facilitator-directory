@@ -1,6 +1,6 @@
-import type { InsightDTO } from "@directory/contracts";
+import { latestInsightDTO } from "@directory/core";
 
-import { apiGet, DEMO_ORG_ID } from "../../lib/api.ts";
+import { DEMO_ORG_ID } from "../../lib/data.ts";
 import { InsightPanel } from "../insight-panel.tsx";
 
 /** Graduate dashboard (demo). In production the org + profile come from the
@@ -20,10 +20,11 @@ export default async function MePage({
     );
   }
 
-  const insight = await apiGet<InsightDTO>("/v1/me/insights", {
-    "x-org-id": sp.org ?? DEMO_ORG_ID,
-    "x-graduate-profile-id": sp.profile,
-  });
+  const insight = await latestInsightDTO(
+    sp.org ?? DEMO_ORG_ID,
+    "graduate",
+    sp.profile,
+  );
 
   return (
     <main>

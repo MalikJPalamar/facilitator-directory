@@ -1,6 +1,7 @@
-import type { ProfileDetail } from "@directory/contracts";
+import { profileToJsonLd } from "@directory/contracts";
+import { getProfileDetail, getSchoolBySlug } from "@directory/core";
 
-import { API_BASE, apiGet } from "../../../lib/api.ts";
+import { SITE_BASE, track } from "../../../lib/data.ts";
 
 type Params = { schoolSlug: string; profileSlug: string };
 
@@ -10,15 +11,21 @@ export default async function ProfilePage({
   params: Promise<Params>;
 }) {
   const { schoolSlug, profileSlug } = await params;
-  const profile = await apiGet<ProfileDetail>(
-    `/v1/schools/${schoolSlug}/profiles/${profileSlug}`,
-  );
+  const school = await getSchoolBySlug(schoolSlug);
+  if (!school) return <main><h1>Profile not found</h1></main>;
+
+  const profile = await getProfileDetail(school.id, profileSlug);
   if (!profile) return <main><h1>Profile not found</h1></main>;
 
-  // Agent-readable structured data (schema.org) served from the API.
-  const jsonLd = await apiGet<Record<string, unknown>>(
-    `/v1/schools/${schoolSlug}/profiles/${profileSlug}?format=jsonld`,
-  );
+  track({
+    organizationId: school.id,
+    eventType: "profile_view",
+    profileId: profile.id,
+    actor: "human",
+  });
+
+  // Agent-readable structured data (schema.org) — the "agents as customers" affordance.
+  const jsonLd = profileToJsonLd(profile, school, SITE_BASE);
 
   return (
     <main>
@@ -41,7 +48,7 @@ export default async function ProfilePage({
           </li>
         ))}
       </ul>
-      <form method="post" action={`${API_BASE}/v1/schools/${schoolSlug}/profiles/${profileSlug}/contact`}>
+      <form method="post" action={`/api/v1/schools/${schoolSlug}/profiles/${profileSlug}/contact`}>
         <button type="submit" style={{ padding: "8px 14px" }}>Contact {profile.displayName.split(" ")[0]}</button>
       </form>
 
