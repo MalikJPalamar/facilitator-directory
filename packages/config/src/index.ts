@@ -1,4 +1,36 @@
+import { existsSync } from "node:fs";
+import { dirname, join, parse } from "node:path";
+
+import { config as loadDotenv } from "dotenv";
 import { z } from "zod";
+
+/**
+ * Load the repo-root `.env` before anything reads process.env.
+ *
+ * Commands run from a package's own cwd (e.g. `pnpm --filter @directory/db ...`),
+ * so we walk up from cwd to the workspace root (marked by pnpm-workspace.yaml)
+ * and load its `.env` if present. Real environment variables always win — dotenv
+ * does not override already-set vars — so production/CI config is unaffected.
+ */
+function loadRootEnv(): void {
+  let dir = process.cwd();
+  const { root } = parse(dir);
+  while (true) {
+    if (existsSync(join(dir, "pnpm-workspace.yaml"))) {
+      const envPath = join(dir, ".env");
+      if (existsSync(envPath)) loadDotenv({ path: envPath });
+      return;
+    }
+    if (dir === root) {
+      // Fallback: a plain `.env` in cwd if no workspace root was found.
+      loadDotenv();
+      return;
+    }
+    dir = dirname(dir);
+  }
+}
+
+loadRootEnv();
 
 /**
  * Centralised, validated configuration for every service in the monorepo.
