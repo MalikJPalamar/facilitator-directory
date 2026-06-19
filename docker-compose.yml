@@ -2,8 +2,11 @@
 # Postgres ships with PostGIS (geo) and pgvector (semantic search) preinstalled.
 services:
   postgres:
-    # pgvector's image is built on the official postgres image; we add PostGIS via init SQL.
-    image: pgvector/pgvector:pg17
+    # Postgres 17 with BOTH PostGIS and pgvector — built from docker/postgres
+    # (the off-the-shelf pgvector and postgis images each ship only one extension).
+    build:
+      context: ./docker/postgres
+    image: directory-postgres:local
     container_name: directory-postgres
     environment:
       POSTGRES_USER: directory
