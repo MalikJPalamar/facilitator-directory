@@ -1,6 +1,6 @@
-import type { InsightDTO } from "@directory/contracts";
+import { latestInsightDTO } from "@directory/core";
 
-import { apiGet, DEMO_ORG_ID } from "../../lib/api.ts";
+import { DEMO_ORG_ID } from "../../lib/data.ts";
 import { InsightPanel } from "../insight-panel.tsx";
 
 /** School admin dashboard (demo): school-level AI insights + billing link. */
@@ -10,9 +10,7 @@ export default async function AdminPage({
   searchParams: Promise<{ org?: string }>;
 }) {
   const sp = await searchParams;
-  const insight = await apiGet<InsightDTO>("/v1/admin/insights", {
-    "x-org-id": sp.org ?? DEMO_ORG_ID,
-  });
+  const insight = await latestInsightDTO(sp.org ?? DEMO_ORG_ID, "school", null);
 
   return (
     <main>

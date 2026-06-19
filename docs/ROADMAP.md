@@ -40,7 +40,7 @@ Prove the slice runs end-to-end against real infrastructure.
 
 ### M2 — Deployed Internal Alpha — **T+14d · 2026-07-03** — _data tier live 2026-06-19_
 - [x] **Hosted Postgres on Neon** (eu-central-1): migrate + RLS + app role; SSL-aware client. Seeded (8 graduates, ~2.2k events) and the **nightly loop ran against Neon** (9 insights, search verified). _M2a done._
-- [ ] Deploy compute (web/api; mcp/worker) — host TBD: single Vercel app with embedded API, or web→Vercel + api→Render (`render.yaml`)
+- [x] **Deploy compute (web/api)** — single Vercel app with embedded API, **live in production** 2026-06-19 (commit `49d3de8`). Fixes: lazy Postgres client so `next build` never parses `DATABASE_URL`; config tolerates quoted/whitespace `DATABASE_URL`; `DEMO_ORG_ID` declared in `turbo.json`. Verified: prod `/api/v1/schools/breathwork-global` + `/search` return live Neon data. _(mcp/worker still to deploy.)_
 - [ ] MCP server reachable by an **external agent** over streamable HTTP (the agents-as-customers proof)
 - [ ] Auth end-to-end (login → tenant-scoped dashboard)
 - [ ] Analytics events landing in the durable stream + (optional) PostHog

@@ -1,6 +1,7 @@
-import type { SchoolPublic, SearchResult } from "@directory/contracts";
+import { SearchQuery } from "@directory/contracts";
+import { getSchoolBySlug, searchDirectory } from "@directory/core";
 
-import { apiGet } from "../../lib/api.ts";
+import { track } from "../../lib/data.ts";
 
 type Params = { schoolSlug: string };
 type Search = { q?: string; modality?: string };
@@ -15,16 +16,20 @@ export default async function DirectoryPage({
   const { schoolSlug } = await params;
   const sp = await searchParams;
 
-  const school = await apiGet<SchoolPublic>(`/v1/schools/${schoolSlug}`);
+  const school = await getSchoolBySlug(schoolSlug);
   if (!school) return <main><h1>School not found</h1></main>;
 
-  const qs = new URLSearchParams();
-  if (sp.q) qs.set("q", sp.q);
-  if (sp.modality) qs.set("modality", sp.modality);
-  const data = await apiGet<SearchResult>(
-    `/v1/schools/${schoolSlug}/search?${qs.toString()}`,
-  );
-  const results = data?.results ?? [];
+  const parsed = SearchQuery.safeParse({ q: sp.q, modality: sp.modality });
+  const query = parsed.success ? parsed.data : SearchQuery.parse({});
+  const data = await searchDirectory(school.id, query);
+  const results = data.results;
+
+  track({
+    organizationId: school.id,
+    eventType: "search",
+    actor: "human",
+    props: { q: sp.q, modality: sp.modality },
+  });
 
   return (
     <main>

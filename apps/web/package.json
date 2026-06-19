@@ -11,8 +11,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@directory/analytics": "workspace:*",
     "@directory/api": "workspace:*",
     "@directory/contracts": "workspace:*",
+    "@directory/core": "workspace:*",
     "hono": "^4.6.14",
     "next": "^15.1.3",
     "react": "^19.0.0",
