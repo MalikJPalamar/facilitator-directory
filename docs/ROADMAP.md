@@ -38,13 +38,15 @@ Prove the slice runs end-to-end against real infrastructure.
 - [x] **CI workflow** (GitHub Actions): typecheck + build + evals on every PR (PR #2)
 **Exit:** a fresh `git clone` reaches a working local stack via documented commands — **met**. (Remaining: confirm CI run goes green on this PR.)
 
-### M2 — Deployed Internal Alpha — **T+14d · 2026-07-03**
-- [ ] Provision hosted Postgres (Supabase) + deploy API/worker/web (Render `render.yaml` / Vercel)
-- [ ] One real school's catalog seeded (anonymized if needed)
+### M2 — Deployed Internal Alpha — **T+14d · 2026-07-03** — _data tier live 2026-06-19_
+- [x] **Hosted Postgres on Neon** (eu-central-1): migrate + RLS + app role; SSL-aware client. Seeded (8 graduates, ~2.2k events) and the **nightly loop ran against Neon** (9 insights, search verified). _M2a done._
+- [ ] Deploy compute (web/api; mcp/worker) — host TBD: single Vercel app with embedded API, or web→Vercel + api→Render (`render.yaml`)
 - [ ] MCP server reachable by an **external agent** over streamable HTTP (the agents-as-customers proof)
 - [ ] Auth end-to-end (login → tenant-scoped dashboard)
 - [ ] Analytics events landing in the durable stream + (optional) PostHog
+- [ ] Nightly loop scheduled as infra cron against the hosted DB
 **Exit:** the founder can demo search + a profile + the AI coaching dashboard from a public URL.
+**Note:** no connected MCP can set Vercel/host env secrets — `DATABASE_URL` + `ANTHROPIC_API_KEY` are set once by the founder in the host dashboard.
 
 ### M3 — Design-Partner Prototype / Private Beta — **T+28d · 2026-07-17** _(T-prototype)_
 - [ ] 1–3 design-partner schools onboarded with real graduates
