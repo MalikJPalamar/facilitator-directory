@@ -48,6 +48,7 @@ const EnvSchema = z.object({
   // Database
   DATABASE_URL: z
     .string()
+    .transform(unquote)
     .default("postgres://directory:directory@localhost:5432/directory"),
 
   // Auth (Better Auth / OAuth 2.1 / MCP authorization server)
@@ -78,6 +79,21 @@ const EnvSchema = z.object({
   TYPESENSE_PORT: z.coerce.number().default(8108),
   TYPESENSE_API_KEY: z.string().default("dev-typesense-key"),
 });
+
+/**
+ * Strip surrounding whitespace and one layer of matching quotes from a value.
+ *
+ * Dashboards (e.g. Vercel) commonly capture a pasted connection string *with*
+ * its surrounding quotes — `"postgresql://…"` — which is a valid string but a
+ * malformed URL, so `postgres()`/`new URL()` throw `Invalid URL` at runtime.
+ * Real `.env` files are de-quoted by dotenv; this makes raw `process.env` just
+ * as forgiving.
+ */
+function unquote(v: string): string {
+  const t = v.trim();
+  if (t.length >= 2 && /^(["']).*\1$/s.test(t)) return t.slice(1, -1).trim();
+  return t;
+}
 
 export type Env = z.infer<typeof EnvSchema>;
 
