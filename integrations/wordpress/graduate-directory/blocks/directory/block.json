@@ -1,0 +1,17 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "graduate-directory/directory",
+  "title": "Graduate Directory",
+  "category": "widgets",
+  "icon": "groups",
+  "description": "Server-rendered directory of your school's certified graduates (SEO + JSON-LD).",
+  "keywords": ["directory", "practitioners", "facilitators"],
+  "attributes": {
+    "modality": { "type": "string", "default": "" },
+    "online": { "type": "boolean", "default": false },
+    "q": { "type": "string", "default": "" }
+  },
+  "supports": { "html": false, "align": ["wide", "full"] },
+  "render": "file:./render.php"
+}

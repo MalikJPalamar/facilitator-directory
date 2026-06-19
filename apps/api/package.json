@@ -1,0 +1,25 @@
+{
+  "name": "@directory/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "lint": "echo 'no lint'",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@directory/analytics": "workspace:*",
+    "@directory/billing": "workspace:*",
+    "@directory/config": "workspace:*",
+    "@directory/contracts": "workspace:*",
+    "@directory/core": "workspace:*",
+    "@hono/node-server": "^1.13.7",
+    "hono": "^4.6.14"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

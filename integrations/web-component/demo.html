@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>The Directory — universal embed demo (no WordPress)</title>
+    <style>
+      body { max-width: 880px; margin: 40px auto; font-family: system-ui, sans-serif; padding: 0 16px; }
+      h1 { color: #3b7a8c; }
+    </style>
+  </head>
+  <body>
+    <h1>Global Breathwork Collective — find a facilitator</h1>
+    <p>
+      This is a plain static HTML page with <strong>no WordPress, no framework</strong> —
+      proving the directory embeds anywhere via one Web Component.
+    </p>
+
+    <!-- The entire integration: one script + one element. -->
+    <script src="./graduate-directory.js"></script>
+    <graduate-directory
+      school="breathwork-global"
+      api-base="http://localhost:8787"
+    ></graduate-directory>
+  </body>
+</html>

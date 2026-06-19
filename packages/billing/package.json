@@ -1,0 +1,14 @@
+{
+  "name": "@directory/billing",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "lint": "echo 'no lint'", "typecheck": "tsc --noEmit" },
+  "dependencies": {
+    "@directory/config": "workspace:*",
+    "@directory/db": "workspace:*",
+    "stripe": "^17.5.0"
+  },
+  "devDependencies": { "typescript": "^5.7.2" }
+}

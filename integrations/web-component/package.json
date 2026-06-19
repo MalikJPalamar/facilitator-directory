@@ -1,0 +1,10 @@
+{
+  "name": "@directory/web-component",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Universal <graduate-directory> embed — drops into any host (Webflow, Squarespace, plain HTML).",
+  "scripts": {
+    "lint": "echo 'no lint'",
+    "typecheck": "echo 'vanilla JS, no typecheck'"
+  }
+}

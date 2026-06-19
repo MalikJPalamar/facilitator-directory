@@ -1,0 +1,13 @@
+{
+  "name": "@directory/analytics",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "lint": "echo 'no lint'", "typecheck": "tsc --noEmit" },
+  "dependencies": {
+    "@directory/config": "workspace:*",
+    "@directory/db": "workspace:*"
+  },
+  "devDependencies": { "typescript": "^5.7.2" }
+}

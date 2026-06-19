@@ -1,0 +1,23 @@
+{
+  "name": "@directory/ai",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "evals": "tsx src/evals.ts",
+    "lint": "echo 'no lint'",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.70.0",
+    "@directory/config": "workspace:*",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
