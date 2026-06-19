@@ -1,8 +1,9 @@
 # The Directory — Roadmap & Milestone Clock
 
 > **Anchor date (T0):** 2026-06-19. All "T-minus" counts are measured from T0.
-> Dates are **proposed targets** under the stated assumptions, not commitments —
-> re-anchor them the moment scope, team, or funding changes (see _Assumptions_).
+> **Track: AGGRESSIVE** — GTM compressed to T+56d (2026-08-14); intermediate
+> milestones scaled to match. Dates are targets under the stated assumptions,
+> not commitments — re-anchor the moment scope, team, or funding changes.
 
 ---
 
@@ -15,8 +16,8 @@
 | **Runtime status** | Typecheck-green; API boots; AI insight engine passes evals **offline**. **Not yet run against a live database** (sandbox had no Docker daemon). |
 | **Next milestone** | **M1 — Runtime Green** |
 | **T-next-milestone** | **T+7d → 2026-06-26** |
-| **T-prototype** | **T+42d → 2026-07-31** (design-partner private beta) |
-| **T-GTM** | **T+84d → 2026-09-11** (public beta / self-serve) |
+| **T-prototype** | **T+28d → 2026-07-17** (design-partner private beta) |
+| **T-GTM** | **T+56d → 2026-08-14** (public beta / self-serve) |
 
 ---
 
@@ -36,7 +37,7 @@ Prove the slice runs end-to-end against real infrastructure.
 - [ ] `pnpm --filter @directory/ai evals` wired into CI
 **Exit:** a fresh `git clone` reaches a working local stack via documented commands, and CI is green.
 
-### M2 — Deployed Internal Alpha — **T+21d · 2026-07-10**
+### M2 — Deployed Internal Alpha — **T+14d · 2026-07-03**
 - [ ] Provision hosted Postgres (Supabase) + deploy API/worker/web (Render `render.yaml` / Vercel)
 - [ ] One real school's catalog seeded (anonymized if needed)
 - [ ] MCP server reachable by an **external agent** over streamable HTTP (the agents-as-customers proof)
@@ -44,7 +45,7 @@ Prove the slice runs end-to-end against real infrastructure.
 - [ ] Analytics events landing in the durable stream + (optional) PostHog
 **Exit:** the founder can demo search + a profile + the AI coaching dashboard from a public URL.
 
-### M3 — Design-Partner Prototype / Private Beta — **T+42d · 2026-07-31** _(T-prototype)_
+### M3 — Design-Partner Prototype / Private Beta — **T+28d · 2026-07-17** _(T-prototype)_
 - [ ] 1–3 design-partner schools onboarded with real graduates
 - [ ] Profile **claim + edit** flow for graduates
 - [ ] Stripe in **test mode** end-to-end (checkout → webhook → subscription state)
@@ -52,7 +53,7 @@ Prove the slice runs end-to-end against real infrastructure.
 - [ ] Feedback loop: weekly insight-quality review against the eval harness
 **Exit:** a paying-intent design partner uses the product weekly and the nightly loop demonstrably improves.
 
-### M4 — Public Beta / GTM — **T+84d · 2026-09-11** _(T-GTM)_
+### M4 — Public Beta / GTM — **T+56d · 2026-08-14** _(T-GTM)_
 - [ ] Billing **live** (real charges) + self-serve onboarding
 - [ ] Marketing site + `integrations/web-component` embed live on ≥1 external site (Webflow/WordPress/etc.)
 - [ ] SEO: JSON-LD profiles indexed; sitemap; `/.well-known/ai-directory.json` discoverable
@@ -64,11 +65,11 @@ Prove the slice runs end-to-end against real infrastructure.
 ## Milestone clock (copy-paste status line)
 
 ```
-T0 = 2026-06-19
+T0 = 2026-06-19                              track: AGGRESSIVE
 M1 Runtime Green ......... T+7d   2026-06-26   [ next ]
-M2 Internal Alpha ....... T+21d  2026-07-10
-M3 Prototype/Beta ....... T+42d  2026-07-31   [ T-prototype ]
-M4 Public Beta / GTM .... T+84d  2026-09-11   [ T-GTM ]
+M2 Internal Alpha ....... T+14d  2026-07-03
+M3 Prototype/Beta ....... T+28d  2026-07-17   [ T-prototype ]
+M4 Public Beta / GTM .... T+56d  2026-08-14   [ T-GTM ]
 ```
 
 ## Assumptions (re-anchor if any change)
@@ -76,6 +77,7 @@ M4 Public Beta / GTM .... T+84d  2026-09-11   [ T-GTM ]
 - No external blockers on infra (Supabase/Render/Vercel/Stripe accounts available).
 - Scope held to the merged PRD; new pillars push dates right, they don't compress.
 - "Prototype" = usable by a design partner, not feature-complete. "GTM" = self-serve public beta, not GA.
+- **Aggressive track:** GTM scope is deliberately thin (core search + claim + embed + billing). Anything beyond that is post-GTM. Higher execution risk is accepted in exchange for speed; if M1/M2 slip, GTM slips 1:1.
 
 ## How this clock stays live (no magic background timer)
 There is **no autonomous cross-session scheduler** in this environment. Cadence is kept by:
