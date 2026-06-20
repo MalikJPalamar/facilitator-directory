@@ -43,7 +43,10 @@ app.on(["GET", "POST"], "/auth/*", (c) => auth.handler(c.req.raw));
  */
 function originOf(c: { req: { url: string; header: (k: string) => string | undefined } }): string {
   const host = c.req.header("x-forwarded-host") ?? c.req.header("host");
-  if (host) return `${c.req.header("x-forwarded-proto") ?? "https"}://${host}`;
+  if (host) {
+    const proto = c.req.header("x-forwarded-proto") ?? new URL(c.req.url).protocol.replace(":", "");
+    return `${proto}://${host}`;
+  }
   return new URL(c.req.url).origin;
 }
 
