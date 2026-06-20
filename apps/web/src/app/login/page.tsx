@@ -32,59 +32,45 @@ export default function LoginPage() {
   }
 
   return (
-    <main style={{ maxWidth: 380 }}>
-      <h1>{mode === "signin" ? "Sign in" : "Create account"}</h1>
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: 10, marginTop: 12 }}>
-        {mode === "signup" && (
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Name"
-            required
-            style={field}
-          />
-        )}
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email"
-          required
-          style={field}
-        />
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
-          required
-          minLength={8}
-          style={field}
-        />
-        {error && <p style={{ color: "#b3261e", margin: 0 }} role="alert">{error}</p>}
-        <button type="submit" disabled={busy} style={{ padding: "10px 14px" }}>
-          {busy ? "…" : mode === "signin" ? "Sign in" : "Sign up"}
-        </button>
-      </form>
-      <p style={{ marginTop: 12, fontSize: ".9rem" }}>
-        {mode === "signin" ? "No account? " : "Have an account? "}
-        <button
-          type="button"
-          onClick={() => {
-            setMode(mode === "signin" ? "signup" : "signin");
-            setError(null);
-          }}
-          style={{ background: "none", border: "none", color: "#3B7A8C", cursor: "pointer", padding: 0 }}
-        >
-          {mode === "signin" ? "Create one" : "Sign in"}
-        </button>
-      </p>
-    </main>
+    <div className="page" style={{ maxWidth: 440 }}>
+      <div className="panel">
+        <h1 style={{ fontSize: "var(--fs-h2)" }}>
+          {mode === "signin" ? "Sign in" : "Create your account"}
+        </h1>
+        <form onSubmit={onSubmit} className="stack" style={{ gap: "var(--space-3)" }}>
+          {mode === "signup" && (
+            <div>
+              <label className="label" htmlFor="name">Name</label>
+              <input id="name" className="input" value={name} onChange={(e) => setName(e.target.value)} required />
+            </div>
+          )}
+          <div>
+            <label className="label" htmlFor="email">Email</label>
+            <input id="email" className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          </div>
+          <div>
+            <label className="label" htmlFor="password">Password</label>
+            <input id="password" className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} />
+          </div>
+          {error && <p style={{ color: "#b3261e", margin: 0, fontSize: "var(--fs-sm)" }} role="alert">{error}</p>}
+          <button type="submit" disabled={busy} className="btn btn-primary btn-block">
+            {busy ? "…" : mode === "signin" ? "Sign in" : "Sign up"}
+          </button>
+        </form>
+        <p style={{ marginBottom: 0, marginTop: "var(--space-4)", fontSize: "var(--fs-sm)" }}>
+          {mode === "signin" ? "No account? " : "Have an account? "}
+          <button
+            type="button"
+            onClick={() => {
+              setMode(mode === "signin" ? "signup" : "signin");
+              setError(null);
+            }}
+            style={{ background: "none", border: "none", color: "var(--color-accent)", cursor: "pointer", padding: 0, font: "inherit" }}
+          >
+            {mode === "signin" ? "Create one" : "Sign in"}
+          </button>
+        </p>
+      </div>
+    </div>
   );
 }
-
-const field: React.CSSProperties = {
-  padding: 10,
-  borderRadius: 8,
-  border: "1px solid #cdd9da",
-};

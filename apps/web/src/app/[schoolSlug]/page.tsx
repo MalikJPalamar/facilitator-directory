@@ -32,41 +32,64 @@ export default async function DirectoryPage({
   });
 
   return (
-    <main>
-      <h1 style={{ color: school.themeColor ?? "#3B7A8C" }}>{school.name}</h1>
-      <p>{school.heroCopy}</p>
+    <>
+      <section className="hero">
+        <h1 style={{ color: "#fff" }}>{school.name}</h1>
+        <p>{school.heroCopy}</p>
+      </section>
 
-      <form style={{ margin: "16px 0", display: "flex", gap: 8 }}>
-        <input
-          name="q"
-          defaultValue={sp.q ?? ""}
-          placeholder="Try: gentle breathwork for anxiety…"
-          style={{ flex: 1, padding: 8, borderRadius: 8, border: "1px solid #cdd9da" }}
-        />
-        <button type="submit" style={{ padding: "8px 14px" }}>Search</button>
-      </form>
+      <div className="page">
+        <form className="searchbar" style={{ marginTop: "calc(-1 * var(--space-8))" }}>
+          <input
+            className="input"
+            name="q"
+            defaultValue={sp.q ?? ""}
+            placeholder="Try: gentle breathwork for anxiety…"
+          />
+          <button type="submit" className="btn btn-primary">Search</button>
+        </form>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))", gap: 16 }}>
-        {results.map((p) => (
-          <article key={p.id} style={{ border: "1px solid #e2e8e9", borderRadius: 12, padding: 16, background: "#fff" }}>
-            <h3 style={{ margin: "0 0 4px" }}>
-              <a href={`/${schoolSlug}/${p.slug}`}>{p.displayName}</a>
-            </h3>
-            <p style={{ margin: "0 0 8px", color: "#3B7A8C", fontSize: ".9rem" }}>{p.headline}</p>
-            <p style={{ margin: 0, fontSize: ".8rem", color: "#5a6b6f" }}>
-              {[p.city, p.country].filter(Boolean).join(", ")}
-              {p.verified ? " · ✓ Verified" : ""}
-              {p.offersOnline ? " · Online" : ""}
-              {typeof p.distanceKm === "number" ? ` · ${p.distanceKm.toFixed(0)} km` : ""}
-            </p>
-            <p style={{ margin: "8px 0 0", fontSize: ".8rem" }}>{p.modalities.join(" · ")}</p>
-            <p style={{ margin: "8px 0 0", fontSize: ".75rem" }}>
-              <a href={`/me?profile=${p.id}`}>View AI insights (demo)</a>
-            </p>
-          </article>
-        ))}
-        {results.length === 0 && <p>No practitioners found.</p>}
+        <p className="results-count">
+          {results.length} {results.length === 1 ? "practitioner" : "practitioners"}
+          {sp.q ? ` for “${sp.q}”` : ""}
+        </p>
+
+        {results.length === 0 ? (
+          <div className="panel">
+            <p className="muted" style={{ margin: 0 }}>No practitioners match yet — try a broader search.</p>
+          </div>
+        ) : (
+          <div className="directory-grid">
+            {results.map((p) => (
+              <a key={p.id} className="p-card" href={`/${schoolSlug}/${p.slug}`}>
+                <div className="p-card__media">
+                  {p.avatarUrl ? (
+                    <img src={p.avatarUrl} alt={p.displayName} loading="lazy" />
+                  ) : (
+                    <span className="p-card__monogram">{p.displayName.charAt(0)}</span>
+                  )}
+                </div>
+                <div className="p-card__body">
+                  <div className="p-card__badges">
+                    {p.verified && <span className="badge badge-verified">✓ Verified</span>}
+                    {p.offersOnline && <span className="badge badge-online">Online</span>}
+                    {p.modalities.slice(0, 2).map((m) => (
+                      <span key={m} className="badge badge-level">{m}</span>
+                    ))}
+                  </div>
+                  <h3 className="p-card__name">{p.displayName}</h3>
+                  <p className="p-card__headline">{p.headline}</p>
+                  <p className="p-card__location">
+                    {[p.city, p.country].filter(Boolean).join(", ")}
+                    {typeof p.distanceKm === "number" ? ` · ${p.distanceKm.toFixed(0)} km` : ""}
+                  </p>
+                  <span className="btn btn-primary btn-block">View profile</span>
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
       </div>
-    </main>
+    </>
   );
 }
