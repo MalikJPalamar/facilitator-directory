@@ -18,16 +18,18 @@ services:
       - key: STRIPE_WEBHOOK_SECRET
         sync: false
 
+  # Optional: the MCP server as a long-lived service. The single-Vercel deploy
+  # already serves the same tools at <origin>/mcp (apps/web .../mcp/route.ts), so
+  # this is only needed for a separate always-on MCP host. Tools call the DB
+  # directly via @directory/core, so it needs DATABASE_URL (not API_BASE_URL).
   - type: web
     name: directory-mcp
     runtime: node
     buildCommand: pnpm install --frozen-lockfile
     startCommand: pnpm --filter @directory/mcp start
     envVars:
-      - key: API_BASE_URL
-        value: https://directory-api.onrender.com
-      - key: BETTER_AUTH_URL
-        sync: false
+      - key: DATABASE_URL
+        fromDatabase: { name: directory-db, property: connectionString }
 
   - type: worker
     name: directory-intelligence
