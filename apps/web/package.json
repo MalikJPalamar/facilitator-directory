@@ -13,9 +13,11 @@
   "dependencies": {
     "@directory/analytics": "workspace:*",
     "@directory/api": "workspace:*",
+    "@directory/auth": "workspace:*",
     "@directory/contracts": "workspace:*",
     "@directory/core": "workspace:*",
     "@directory/mcp": "workspace:*",
+    "better-auth": "^1.2.7",
     "hono": "^4.6.14",
     "mcp-handler": "^1.1.0",
     "next": "^15.1.3",

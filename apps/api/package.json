@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@directory/analytics": "workspace:*",
+    "@directory/auth": "workspace:*",
     "@directory/billing": "workspace:*",
     "@directory/config": "workspace:*",
     "@directory/contracts": "workspace:*",

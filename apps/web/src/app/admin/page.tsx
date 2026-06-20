@@ -1,20 +1,31 @@
 import { latestInsightDTO } from "@directory/core";
+import { redirect } from "next/navigation";
 
-import { DEMO_ORG_ID } from "../../lib/data.ts";
+import { getAuthContext } from "../../lib/auth-session.ts";
 import { InsightPanel } from "../insight-panel.tsx";
+import { LogoutButton } from "../logout-button.tsx";
 
-/** School admin dashboard (demo): school-level AI insights + billing link. */
-export default async function AdminPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ org?: string }>;
-}) {
-  const sp = await searchParams;
-  const insight = await latestInsightDTO(sp.org ?? DEMO_ORG_ID, "school", null);
+/**
+ * School admin dashboard — school-level AI insights + billing link. Gated to
+ * owners/admins of the signed-in user's organization; the tenant is the
+ * session's org, not a demo constant.
+ */
+export default async function AdminPage() {
+  const ctx = await getAuthContext();
+  if (!ctx) redirect("/login");
+  if (ctx.role !== "owner" && ctx.role !== "admin") redirect("/me");
+  if (!ctx.organizationId) redirect("/me");
+
+  const insight = await latestInsightDTO(ctx.organizationId, "school", null);
 
   return (
     <main>
-      <p><a href="/">← Home</a></p>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <p style={{ margin: 0 }}><a href="/">← Home</a></p>
+        <span style={{ fontSize: ".85rem", color: "#5a6b6f" }}>
+          {ctx.name} ({ctx.role}) <LogoutButton />
+        </span>
+      </div>
       <h1>School admin</h1>
       {insight ? (
         <InsightPanel insight={insight} />
