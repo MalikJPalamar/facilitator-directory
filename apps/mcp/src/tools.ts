@@ -3,7 +3,6 @@ import { SearchQuery } from "@directory/contracts";
 import {
   getProfileDetail,
   getSchoolBySlug,
-  latestInsightDTO,
   searchDirectory,
 } from "@directory/core";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -109,25 +108,4 @@ export function registerDirectoryTools(server: McpServer): void {
     },
   );
 
-  server.registerTool(
-    "get_insights",
-    {
-      title: "Get a graduate's AI insights",
-      description:
-        "Latest AI coaching insight for a graduate. Scoped — requires organizationId + profileId (derived from the OAuth token in production).",
-      inputSchema: {
-        organizationId: z.string().describe("Tenant/organization id"),
-        profileId: z.string().describe("Graduate profile id"),
-      },
-    },
-    async (args) => {
-      const insight = await latestInsightDTO(
-        args.organizationId,
-        "graduate",
-        args.profileId,
-      );
-      if (!insight) return fail("no insight yet for that profile");
-      return ok(insight);
-    },
-  );
 }
