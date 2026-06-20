@@ -21,24 +21,26 @@ export default async function MePage() {
       : null;
 
   return (
-    <main>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <p style={{ margin: 0 }}><a href="/breathwork-global">← Directory</a></p>
-        <span style={{ fontSize: ".85rem", color: "#5a6b6f" }}>
+    <div className="page">
+      <div className="page-bar">
+        <a href="/breathwork-global">← Directory</a>
+        <span className="muted" style={{ fontSize: "var(--fs-sm)", display: "inline-flex", gap: "var(--space-3)", alignItems: "center" }}>
           {ctx.name} <LogoutButton />
         </span>
       </div>
       <h1>Your performance</h1>
       {!profileId ? (
-        <p>
-          This account isn&apos;t linked to a practitioner profile yet. Ask your
-          school to connect your profile, then your AI insights appear here.
-        </p>
+        <div className="panel">
+          <p style={{ margin: 0 }}>
+            This account isn&apos;t linked to a practitioner profile yet. Ask your
+            school to connect your profile, then your AI insights appear here.
+          </p>
+        </div>
       ) : insight ? (
         <InsightPanel insight={insight} />
       ) : (
-        <p>No insight yet. Run <code>pnpm intelligence:nightly</code>.</p>
+        <div className="panel"><p style={{ margin: 0 }}>No insight yet. Run <code>pnpm intelligence:nightly</code>.</p></div>
       )}
-    </main>
+    </div>
   );
 }

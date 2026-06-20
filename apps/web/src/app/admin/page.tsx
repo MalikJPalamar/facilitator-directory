@@ -19,10 +19,10 @@ export default async function AdminPage() {
   const insight = await latestInsightDTO(ctx.organizationId, "school", null);
 
   return (
-    <main>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <p style={{ margin: 0 }}><a href="/">← Home</a></p>
-        <span style={{ fontSize: ".85rem", color: "#5a6b6f" }}>
+    <div className="page">
+      <div className="page-bar">
+        <a href="/">← Home</a>
+        <span className="muted" style={{ fontSize: "var(--fs-sm)", display: "inline-flex", gap: "var(--space-3)", alignItems: "center" }}>
           {ctx.name} ({ctx.role}) <LogoutButton />
         </span>
       </div>
@@ -30,12 +30,12 @@ export default async function AdminPage() {
       {insight ? (
         <InsightPanel insight={insight} />
       ) : (
-        <p>No school insight yet. Run <code>pnpm intelligence:nightly</code>.</p>
+        <div className="panel"><p style={{ margin: 0 }}>No school insight yet. Run <code>pnpm intelligence:nightly</code>.</p></div>
       )}
-      <p style={{ marginTop: 24, color: "#5a6b6f", fontSize: ".9rem" }}>
+      <p className="muted" style={{ marginTop: "var(--space-5)", fontSize: "var(--fs-sm)" }}>
         Members, certification verification, and the Stripe billing portal link
         mount here (minimal in this scaffold).
       </p>
-    </main>
+    </div>
   );
 }

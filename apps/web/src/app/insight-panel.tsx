@@ -12,10 +12,10 @@ const VERDICT_COLOR: Record<string, string> = {
  * (the visible proof that the loop learns). */
 export function InsightPanel({ insight }: { insight: InsightDTO }) {
   return (
-    <section style={{ border: "1px solid #e2e8e9", borderRadius: 12, padding: 20, background: "#fff" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-        <h2 style={{ margin: 0 }}>AI insights &amp; coaching</h2>
-        <span style={{ fontSize: ".75rem", color: "#5a6b6f" }}>
+    <section className="panel panel--accent">
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "var(--space-3)" }}>
+        <h2 style={{ margin: 0, fontSize: "var(--fs-h2)" }}>AI insights &amp; coaching</h2>
+        <span className="muted" style={{ fontSize: "var(--fs-xs)" }}>
           v{insight.version} · {insight.source?.includes("fallback") ? "offline engine" : insight.source}
         </span>
       </div>
@@ -23,9 +23,9 @@ export function InsightPanel({ insight }: { insight: InsightDTO }) {
       <p style={{ fontSize: "1.05rem" }}>{insight.narrative}</p>
 
       {insight.outcome && (
-        <p style={{ fontSize: ".85rem" }}>
+        <p style={{ fontSize: "var(--fs-sm)" }}>
           <strong>Last period&apos;s recommendation:</strong>{" "}
-          <span style={{ color: VERDICT_COLOR[insight.outcome.verdict] ?? "#5a6b6f" }}>
+          <span style={{ color: VERDICT_COLOR[insight.outcome.verdict] ?? "var(--color-text-muted)", fontWeight: 600 }}>
             {insight.outcome.verdict}
           </span>{" "}
           (Δ {Object.entries(insight.outcome.delta)
@@ -35,25 +35,27 @@ export function InsightPanel({ insight }: { insight: InsightDTO }) {
         </p>
       )}
 
-      <h3 style={{ marginBottom: 8 }}>Next best actions</h3>
-      <ol style={{ paddingLeft: 18 }}>
+      <h3 style={{ marginBottom: "var(--space-2)", fontSize: "var(--fs-h3)" }}>Next best actions</h3>
+      <ol style={{ paddingLeft: 18, margin: 0 }}>
         {insight.nextBestActions.map((a, i) => (
-          <li key={i} style={{ marginBottom: 8 }}>
+          <li key={i} style={{ marginBottom: "var(--space-3)" }}>
             <strong>{a.action}</strong>{" "}
-            <span style={{ fontSize: ".7rem", background: "#eef4f5", padding: "1px 6px", borderRadius: 999 }}>
+            <span className="badge badge-verified" style={{ fontWeight: 600 }}>
               {a.effort} effort → {a.targetMetric}
             </span>
-            <div style={{ fontSize: ".85rem", color: "#5a6b6f" }}>{a.rationale}</div>
+            <div className="muted" style={{ fontSize: "var(--fs-sm)" }}>{a.rationale}</div>
           </li>
         ))}
       </ol>
 
-      <h3 style={{ marginBottom: 8 }}>This period</h3>
-      <ul style={{ fontSize: ".85rem", color: "#33484d" }}>
+      <h3 style={{ marginBottom: "var(--space-2)", marginTop: "var(--space-4)", fontSize: "var(--fs-h3)" }}>This period</h3>
+      <div className="p-card__badges">
         {Object.entries(insight.metrics).map(([k, v]) => (
-          <li key={k}>{k}: {v}</li>
+          <span key={k} className="badge" style={{ background: "var(--color-surface)", color: "var(--color-text)" }}>
+            {k}: {v}
+          </span>
         ))}
-      </ul>
+      </div>
     </section>
   );
 }
