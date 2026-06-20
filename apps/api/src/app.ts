@@ -27,7 +27,16 @@ import { openApiDocument } from "./openapi.ts";
 export const app = new Hono().basePath("/api");
 app.use("*", cors());
 
-const MCP_URL = `${env.API_BASE_URL.replace(/\/api$/, "")}:${env.MCP_PORT}/mcp`;
+/**
+ * Public origin of the current request, honouring the proxy headers Vercel sets,
+ * so machine-discovery docs advertise the real deployment URL instead of the
+ * server's own env defaults (which were `http://localhost:8787` in prod).
+ */
+function originOf(c: { req: { url: string; header: (k: string) => string | undefined } }): string {
+  const host = c.req.header("x-forwarded-host") ?? c.req.header("host");
+  if (host) return `${c.req.header("x-forwarded-proto") ?? "https"}://${host}`;
+  return new URL(c.req.url).origin;
+}
 
 /**
  * SCAFFOLD AUTH. The validated OAuth token's org-context + scope claims are
@@ -44,14 +53,14 @@ function tenantContext(c: { req: { header: (k: string) => string | undefined } }
 }
 
 // ── Agent + machine affordances ───────────────────────────────────────────────
-app.get("/openapi.json", (c) => c.json(openApiDocument(env.API_BASE_URL)));
+app.get("/openapi.json", (c) => c.json(openApiDocument(`${originOf(c)}/api`)));
 app.get("/.well-known/ai-directory.json", (c) =>
-  c.json(wellKnownAffordance(env.API_BASE_URL, MCP_URL)),
+  c.json(wellKnownAffordance(`${originOf(c)}/api`, `${originOf(c)}/mcp`)),
 );
 app.get("/docs", (c) =>
   c.html(`<!doctype html><html><head><meta charset="utf-8"/>
     <title>The Directory API</title></head>
-    <body><script id="api-reference" data-url="${env.API_BASE_URL}/openapi.json"></script>
+    <body><script id="api-reference" data-url="${originOf(c)}/api/openapi.json"></script>
     <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
     </body></html>`),
 );
