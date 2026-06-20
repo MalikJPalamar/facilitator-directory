@@ -360,6 +360,19 @@ code {
     grid-template-columns: 1fr;
   }
 }
+.directory-grid--3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+@media (max-width: 1024px) {
+  .directory-grid--3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 560px) {
+  .directory-grid--3 {
+    grid-template-columns: 1fr;
+  }
+}
 
 .p-card {
   background: #fff;

@@ -24,7 +24,7 @@ export default function Home() {
       </section>
 
       <div className="page">
-        <div className="directory-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+        <div className="directory-grid directory-grid--3">
           <div className="panel">
             <h3>For schools</h3>
             <p className="muted">
