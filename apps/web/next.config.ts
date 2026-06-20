@@ -14,6 +14,7 @@ const config: NextConfig = {
     "@directory/contracts",
     "@directory/mcp",
     "@directory/auth",
+    "@directory/worker",
   ],
   // Keep node-oriented libs out of the bundle (dynamic require / native bits).
   serverExternalPackages: ["postgres", "stripe", "dotenv", "better-auth"],

@@ -11,7 +11,8 @@
     "POSTHOG_API_KEY",
     "POSTHOG_HOST",
     "API_BASE_URL",
-    "DEMO_ORG_ID"
+    "DEMO_ORG_ID",
+    "CRON_SECRET"
   ],
   "tasks": {
     "build": {
