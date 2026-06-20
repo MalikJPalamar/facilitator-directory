@@ -28,7 +28,10 @@ export default async function MePage() {
           {ctx.name} <LogoutButton />
         </span>
       </div>
-      <h1>Your performance</h1>
+      <div className="page-bar" style={{ marginBottom: "var(--space-4)" }}>
+        <h1 style={{ margin: 0 }}>Your performance</h1>
+        {profileId && <a className="btn btn-outline" href="/me/edit">Edit profile</a>}
+      </div>
       {!profileId ? (
         <div className="panel">
           <p style={{ margin: 0 }}>
