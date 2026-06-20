@@ -1,4 +1,5 @@
 import { capture } from "@directory/analytics";
+import { auth } from "@directory/auth";
 import { handleWebhook } from "@directory/billing";
 import { env } from "@directory/config";
 import {
@@ -28,13 +29,24 @@ export const app = new Hono().basePath("/api");
 app.use("*", cors());
 
 /**
+ * Better Auth — identity + the organization (tenant) plugin. Mounted here so the
+ * single Vercel deploy serves auth at `<origin>/api/auth/*` (Better Auth's
+ * default basePath). The handler gets the raw Web Request; cookies + sessions
+ * flow through the same origin as the app, so no cross-site config is needed.
+ */
+app.on(["GET", "POST"], "/auth/*", (c) => auth.handler(c.req.raw));
+
+/**
  * Public origin of the current request, honouring the proxy headers Vercel sets,
  * so machine-discovery docs advertise the real deployment URL instead of the
  * server's own env defaults (which were `http://localhost:8787` in prod).
  */
 function originOf(c: { req: { url: string; header: (k: string) => string | undefined } }): string {
   const host = c.req.header("x-forwarded-host") ?? c.req.header("host");
-  if (host) return `${c.req.header("x-forwarded-proto") ?? "https"}://${host}`;
+  if (host) {
+    const proto = c.req.header("x-forwarded-proto") ?? new URL(c.req.url).protocol.replace(":", "");
+    return `${proto}://${host}`;
+  }
   return new URL(c.req.url).origin;
 }
 

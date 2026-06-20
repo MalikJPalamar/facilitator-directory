@@ -41,8 +41,8 @@ Prove the slice runs end-to-end against real infrastructure.
 ### M2 — Deployed Internal Alpha — **T+14d · 2026-07-03** — _data tier live 2026-06-19_
 - [x] **Hosted Postgres on Neon** (eu-central-1): migrate + RLS + app role; SSL-aware client. Seeded (8 graduates, ~2.2k events) and the **nightly loop ran against Neon** (9 insights, search verified). _M2a done._
 - [x] **Deploy compute (web/api)** — single Vercel app with embedded API, **live in production** 2026-06-19 (commit `49d3de8`). Fixes: lazy Postgres client so `next build` never parses `DATABASE_URL`; config tolerates quoted/whitespace `DATABASE_URL`; `DEMO_ORG_ID` declared in `turbo.json`. Verified: prod `/api/v1/schools/breathwork-global` + `/search` return live Neon data. _(mcp/worker still to deploy.)_
-- [ ] MCP server reachable by an **external agent** over streamable HTTP (the agents-as-customers proof)
-- [ ] Auth end-to-end (login → tenant-scoped dashboard)
+- [x] **MCP server reachable over streamable HTTP** — mounted in the single-Vercel deploy at `<origin>/mcp` via `mcp-handler` (stateless), tools call `@directory/core` directly; advertised in `/api/.well-known/ai-directory.json` (origin-derived). Verified locally: initialize + tools/list + tools/call. _(Needs Vercel Deployment Protection off for true external reach — infra toggle.)_
+- [x] **Auth end-to-end** — Better Auth (email/password + organization plugin) mounted in Hono at `/api/auth/*`; login/signup UI; session → membership resolves org + role; `/admin` (owner/admin) and `/me` (graduate) gated + tenant-scoped, replacing `DEMO_ORG_ID`; `/dashboard` role-routes; demo logins seeded (`pnpm --filter @directory/auth seed:demo`). Verified end-to-end against Neon.
 - [ ] Analytics events landing in the durable stream + (optional) PostHog
 - [ ] Nightly loop scheduled as infra cron against the hosted DB
 **Exit:** the founder can demo search + a profile + the AI coaching dashboard from a public URL.

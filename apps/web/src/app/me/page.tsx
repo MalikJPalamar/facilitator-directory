@@ -1,39 +1,43 @@
 import { latestInsightDTO } from "@directory/core";
+import { redirect } from "next/navigation";
 
-import { DEMO_ORG_ID } from "../../lib/data.ts";
+import { getAuthContext, graduateProfileIdFor } from "../../lib/auth-session.ts";
 import { InsightPanel } from "../insight-panel.tsx";
+import { LogoutButton } from "../logout-button.tsx";
 
-/** Graduate dashboard (demo). In production the org + profile come from the
- * authenticated session/token; here we pass them as the validated-claim headers. */
-export default async function MePage({
-  searchParams,
-}: {
-  searchParams: Promise<{ profile?: string; org?: string }>;
-}) {
-  const sp = await searchParams;
-  if (!sp.profile) {
-    return (
-      <main>
-        <h1>Graduate dashboard</h1>
-        <p>Open this from a directory card&apos;s &quot;View AI insights&quot; link, or pass <code>?profile=&lt;id&gt;</code>.</p>
-      </main>
-    );
-  }
+/**
+ * Graduate dashboard — tenant-scoped to the signed-in user. Org + profile come
+ * from the authenticated session (resolved via the user's membership), not a
+ * demo header.
+ */
+export default async function MePage() {
+  const ctx = await getAuthContext();
+  if (!ctx) redirect("/login");
 
-  const insight = await latestInsightDTO(
-    sp.org ?? DEMO_ORG_ID,
-    "graduate",
-    sp.profile,
-  );
+  const profileId = ctx.organizationId ? await graduateProfileIdFor(ctx) : null;
+  const insight =
+    ctx.organizationId && profileId
+      ? await latestInsightDTO(ctx.organizationId, "graduate", profileId)
+      : null;
 
   return (
     <main>
-      <p><a href="/breathwork-global">← Directory</a></p>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <p style={{ margin: 0 }}><a href="/breathwork-global">← Directory</a></p>
+        <span style={{ fontSize: ".85rem", color: "#5a6b6f" }}>
+          {ctx.name} <LogoutButton />
+        </span>
+      </div>
       <h1>Your performance</h1>
-      {insight ? (
+      {!profileId ? (
+        <p>
+          This account isn&apos;t linked to a practitioner profile yet. Ask your
+          school to connect your profile, then your AI insights appear here.
+        </p>
+      ) : insight ? (
         <InsightPanel insight={insight} />
       ) : (
-        <p>No insight yet. Seed the DB and run <code>pnpm intelligence:nightly</code>.</p>
+        <p>No insight yet. Run <code>pnpm intelligence:nightly</code>.</p>
       )}
     </main>
   );

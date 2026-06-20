@@ -18,3 +18,8 @@ export {
   type RunResult,
 } from "./insight-service.ts";
 export { enqueueReview, listPendingReviews, decideReview } from "./review.ts";
+export {
+  membershipForUser,
+  graduateProfileForMember,
+  type Membership,
+} from "./membership.ts";

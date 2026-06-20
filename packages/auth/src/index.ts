@@ -5,6 +5,14 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { organization } from "better-auth/plugins";
 
 /**
+ * Base URL: use BETTER_AUTH_URL when explicitly set (prod), otherwise leave it
+ * undefined so Better Auth infers the origin from each request. One build then
+ * works across every Vercel preview + production URL without baking one origin
+ * in. (env.BETTER_AUTH_URL carries a localhost default we deliberately bypass.)
+ */
+const explicitBaseUrl = process.env.BETTER_AUTH_URL;
+
+/**
  * Better Auth — the platform's identity layer AND its OAuth 2.1 authorization
  * server (which is what makes the MCP server a proper OAuth resource server).
  *
@@ -20,7 +28,7 @@ import { organization } from "better-auth/plugins";
  * those Bearer tokens instead of the scaffold `x-org-id` header.
  */
 export const auth = betterAuth({
-  baseURL: env.BETTER_AUTH_URL,
+  ...(explicitBaseUrl ? { baseURL: explicitBaseUrl } : {}),
   secret: env.BETTER_AUTH_SECRET,
   database: drizzleAdapter(db, { provider: "pg" }),
   emailAndPassword: { enabled: true },
@@ -33,3 +41,4 @@ export const auth = betterAuth({
 });
 
 export type Auth = typeof auth;
+export type Session = typeof auth.$Infer.Session;
