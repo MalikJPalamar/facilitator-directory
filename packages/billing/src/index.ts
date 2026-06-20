@@ -13,6 +13,37 @@ function stripe(): Stripe {
   return new Stripe(env.STRIPE_SECRET_KEY);
 }
 
+export type SubscriptionView = {
+  status: string;
+  plan: string;
+  seats: number;
+  currentPeriodEnd: Date | null;
+  stripeCustomerId: string | null;
+};
+
+/** The queryable subscription mirror for a school (Stripe is the source of truth). */
+export async function getSubscription(
+  organizationId: string,
+): Promise<SubscriptionView | null> {
+  const [row] = await db
+    .select({
+      status: tables.subscription.status,
+      plan: tables.subscription.plan,
+      seats: tables.subscription.seats,
+      currentPeriodEnd: tables.subscription.currentPeriodEnd,
+      stripeCustomerId: tables.subscription.stripeCustomerId,
+    })
+    .from(tables.subscription)
+    .where(eq(tables.subscription.organizationId, organizationId))
+    .limit(1);
+  return row ?? null;
+}
+
+/** Whether Stripe checkout is configured (test or live keys present). */
+export function billingConfigured(): boolean {
+  return Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_PRICE_ID);
+}
+
 export async function createCheckoutSession(opts: {
   organizationId: string;
   seats: number;
