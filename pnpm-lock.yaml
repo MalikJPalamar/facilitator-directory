@@ -94,6 +94,9 @@ importers:
       '@directory/auth':
         specifier: workspace:*
         version: link:../../packages/auth
+      '@directory/billing':
+        specifier: workspace:*
+        version: link:../../packages/billing
       '@directory/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
