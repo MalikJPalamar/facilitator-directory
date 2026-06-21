@@ -61,8 +61,10 @@ export function wellKnownAffordance(baseUrl: string, mcpUrl: string) {
     capabilities: [
       "search_directory",
       "get_profile",
+      "get_school",
       "create_lead",
-      "update_profile",
+      "suggest_profile_edit",
+      "get_insights",
       "import_roster",
       "subscribe_webhooks",
     ],
