@@ -304,8 +304,8 @@ export async function setWebhookEndpointEnabled(
   organizationId: string,
   endpointId: string,
   enabled: boolean,
-): Promise<void> {
-  await db
+): Promise<boolean> {
+  const rows = await db
     .update(tables.webhookEndpoint)
     .set({ enabled, updatedAt: new Date() })
     .where(
@@ -313,7 +313,9 @@ export async function setWebhookEndpointEnabled(
         eq(tables.webhookEndpoint.id, endpointId),
         eq(tables.webhookEndpoint.organizationId, organizationId),
       ),
-    );
+    )
+    .returning({ id: tables.webhookEndpoint.id });
+  return rows.length > 0;
 }
 
 export async function rotateWebhookSecret(
@@ -337,13 +339,15 @@ export async function rotateWebhookSecret(
 export async function deleteWebhookEndpoint(
   organizationId: string,
   endpointId: string,
-): Promise<void> {
-  await db
+): Promise<boolean> {
+  const rows = await db
     .delete(tables.webhookEndpoint)
     .where(
       and(
         eq(tables.webhookEndpoint.id, endpointId),
         eq(tables.webhookEndpoint.organizationId, organizationId),
       ),
-    );
+    )
+    .returning({ id: tables.webhookEndpoint.id });
+  return rows.length > 0;
 }

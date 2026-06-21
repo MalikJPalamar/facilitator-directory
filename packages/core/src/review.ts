@@ -1,4 +1,7 @@
+import type { ProfileUpdate } from "@directory/contracts";
 import { and, db, desc, eq, tables } from "@directory/db";
+
+import { updateProfile } from "./profiles.ts";
 
 /**
  * Human-review queue. Any AI/agent-suggested change to PUBLISHED content is
@@ -46,9 +49,11 @@ export async function decideReview(
   decision: "approved" | "rejected",
   decidedBy: string,
 ): Promise<boolean> {
-  // Tenant-scoped: an org can only decide its OWN review items. Returns false
-  // when the id doesn't match a pending item in this org (caller -> 404), so a
-  // cross-tenant id can't be silently mutated or probed as a 200.
+  // Tenant-scoped compare-and-set: an org can only decide its OWN pending items.
+  // Returns false when the id doesn't match a pending item in this org (caller
+  // -> 404), so a cross-tenant id can't be silently mutated or probed as a 200.
+  // Doing the status flip first (CAS on status='pending') makes exactly one
+  // caller the winner under a race; only the winner then applies the change.
   const rows = await db
     .update(tables.reviewItem)
     .set({ status: decision, decidedBy, decidedAt: new Date() })
@@ -59,6 +64,27 @@ export async function decideReview(
         eq(tables.reviewItem.status, "pending"),
       ),
     )
-    .returning({ id: tables.reviewItem.id });
-  return rows.length > 0;
+    .returning({
+      profileId: tables.reviewItem.profileId,
+      kind: tables.reviewItem.kind,
+      payload: tables.reviewItem.payload,
+    });
+  if (rows.length === 0) return false;
+
+  // Approving a queued profile-change actually APPLIES it (otherwise approval is
+  // a no-op). updateProfile re-validates the payload + is org-scoped.
+  const item = rows[0]!;
+  if (
+    decision === "approved" &&
+    item.kind === "profile_change_suggestion" &&
+    item.profileId &&
+    item.payload
+  ) {
+    await updateProfile(
+      organizationId,
+      item.profileId,
+      item.payload as ProfileUpdate,
+    );
+  }
+  return true;
 }

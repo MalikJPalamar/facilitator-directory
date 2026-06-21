@@ -289,7 +289,7 @@ app.post("/v1/schools/:slug/leads", requireScope(SCOPES.leadsWrite), async (c) =
         status: 201,
         body: { id: lead.id, kind: parsed.data.kind, status: "new", createdAt: lead.createdAt },
       };
-    });
+    }, parsed.data);
   } catch (err) {
     if (err instanceof LeadError) return fail(c, 404, "not_found", err.message);
     throw err;
@@ -352,7 +352,7 @@ app.post("/v1/schools/:slug/roster", requireScope(SCOPES.rosterAdmin), async (c)
   return withIdempotency(c, ctx, async () => {
     const r = await importRoster(school.id, parsed.data, { baseUrl: originOf(c) });
     return { status: 200, body: r };
-  });
+  }, parsed.data);
 });
 
 // ── AI insights & coaching ────────────────────────────────────────────────────
@@ -399,8 +399,8 @@ app.get("/v1/me/metrics", requireScope(SCOPES.insightsRead), async (c) => {
   if (!organizationId || !profileId)
     return fail(c, 401, "unauthorized", "missing tenant/profile context");
   const { days, curFrom, prevFrom, now } = windowRange(c.req.query("window"));
-  const current = await getProfileMetrics(profileId, curFrom, now);
-  const previous = await getProfileMetrics(profileId, prevFrom, curFrom);
+  const current = await getProfileMetrics(organizationId, profileId, curFrom, now);
+  const previous = await getProfileMetrics(organizationId, profileId, prevFrom, curFrom);
   return c.json({ window: `${days}d`, current, previous, delta: deltaOf(current, previous) });
 });
 
@@ -445,7 +445,7 @@ app.post("/v1/admin/claims", requireScope(SCOPES.schoolAdmin), async (c) => {
         return { status: 409, body: { error: { code: "conflict", message: err.message } } };
       throw err;
     }
-  });
+  }, parsed.data);
 });
 
 // ── Review queue (list + decide) ──────────────────────────────────────────────
@@ -469,6 +469,10 @@ app.post("/v1/admin/reviews/:id/decision", requireScope(SCOPES.reviewsWrite), as
 });
 
 // ── Eval runs (insight quality) ───────────────────────────────────────────────
+// NOTE: eval runs measure the platform insight engine, not a single tenant —
+// the eval_run table has no organization_id, so this is deliberately GLOBAL
+// quality telemetry surfaced to school admins. `failures` carries only synthetic
+// fixture names + scoring reasons (no tenant PII) by contract (packages/ai evals).
 app.get("/v1/admin/eval-runs", requireScope(SCOPES.schoolAdmin), async (c) => {
   const limit = Math.min(50, Math.max(1, Number(c.req.query("limit")) || 10));
   const runs = await listRecentEvalRuns(limit);
@@ -518,7 +522,7 @@ app.post("/v1/admin/keys", requireScope(SCOPES.keysAdmin), async (c) => {
       expiresAt: parsed.data.expiresAt ? new Date(parsed.data.expiresAt) : null,
     });
     return { status: 201, body: { id, prefix, plaintext } };
-  });
+  }, parsed.data);
 });
 
 app.delete("/v1/admin/keys/:id", requireScope(SCOPES.keysAdmin), async (c) => {
@@ -554,7 +558,12 @@ app.patch("/v1/admin/webhooks/:id", requireScope(SCOPES.webhooksAdmin), async (c
   const parsed = WebhookToggle.safeParse(await c.req.json().catch(() => ({})));
   if (!parsed.success)
     return fail(c, 400, "validation_error", "invalid toggle", parsed.error.flatten());
-  await setWebhookEndpointEnabled(c.var.tenant.organizationId!, c.req.param("id"), parsed.data.enabled);
+  const ok = await setWebhookEndpointEnabled(
+    c.var.tenant.organizationId!,
+    c.req.param("id"),
+    parsed.data.enabled,
+  );
+  if (!ok) return fail(c, 404, "not_found", "endpoint not found");
   return c.json({ ok: true });
 });
 
@@ -565,7 +574,8 @@ app.post("/v1/admin/webhooks/:id/rotate", requireScope(SCOPES.webhooksAdmin), as
 });
 
 app.delete("/v1/admin/webhooks/:id", requireScope(SCOPES.webhooksAdmin), async (c) => {
-  await deleteWebhookEndpoint(c.var.tenant.organizationId!, c.req.param("id"));
+  const ok = await deleteWebhookEndpoint(c.var.tenant.organizationId!, c.req.param("id"));
+  if (!ok) return fail(c, 404, "not_found", "endpoint not found");
   return c.json({ ok: true });
 });
 

@@ -178,7 +178,8 @@ export function runInsightForProfile(args: {
     name: args.name,
     brandGuidelines: args.brandGuidelines,
     now: args.now ?? new Date(),
-    computeMetrics: (from, to) => getProfileMetrics(args.profileId, from, to),
+    computeMetrics: (from, to) =>
+      getProfileMetrics(args.organizationId, args.profileId, from, to),
   });
 }
 

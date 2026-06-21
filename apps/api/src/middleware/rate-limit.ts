@@ -26,12 +26,24 @@ function classify(method: string, path: string): RouteClass {
   return "read";
 }
 
-/** Same forwarded-header trust as app.ts originOf(); Vercel sets these at edge. */
+/**
+ * Best-effort client IP for per-IP buckets. Client-supplied forwarded headers are
+ * spoofable, so we do NOT trust `x-real-ip` (anyone can set it) and we do NOT use
+ * the LEFT-most x-forwarded-for hop (also attacker-controlled). Order:
+ *   1. x-vercel-forwarded-for — set by Vercel's edge, not client-overridable.
+ *   2. the RIGHT-most x-forwarded-for hop — appended by the nearest trusted proxy.
+ *   3. "unknown" — shared bucket (degrades safely).
+ * Per-IP is only a coarse backstop; the per-KEY bucket is the real control, and a
+ * platform WAF (Vercel firewall) is the volumetric backstop for anonymous floods.
+ */
 function clientIp(c: Context): string {
-  const real = c.req.header("x-real-ip");
-  if (real) return real.trim();
+  const vercel = c.req.header("x-vercel-forwarded-for");
+  if (vercel) return vercel.split(",")[0]!.trim();
   const xff = c.req.header("x-forwarded-for");
-  if (xff) return xff.split(",")[0]!.trim(); // left-most = original client
+  if (xff) {
+    const hops = xff.split(",").map((h) => h.trim()).filter(Boolean);
+    if (hops.length) return hops[hops.length - 1]!; // right-most = nearest proxy
+  }
   return "unknown";
 }
 

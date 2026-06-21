@@ -1,4 +1,4 @@
-import { and, db, eq, tables } from "@directory/db";
+import { and, db, desc, eq, tables } from "@directory/db";
 
 /** A typed not-found so the API layer can map it to a 404 envelope. */
 export class LeadError extends Error {
@@ -62,12 +62,12 @@ export async function createLead(input: {
   return { id: row!.id, createdAt: row!.createdAt.toISOString() };
 }
 
-/** Admin view: recent leads for a school. */
+/** Admin view: most-recent leads for a school (newest first). */
 export async function listLeads(organizationId: string, limit = 100) {
   return db
     .select()
     .from(tables.lead)
     .where(eq(tables.lead.organizationId, organizationId))
-    .orderBy(tables.lead.createdAt)
+    .orderBy(desc(tables.lead.createdAt))
     .limit(limit);
 }

@@ -19,6 +19,14 @@ export async function withIdempotency(
   c: Context,
   ctx: Tenant,
   handler: () => Promise<{ status: number; body: Record<string, unknown> }>,
+  /**
+   * The validated request payload. Folded into the idempotency scope so the SAME
+   * key with a DIFFERENT body is a distinct operation and can't replay a stale
+   * response (e.g. minting a key or issuing a claim for the wrong target). The
+   * route already parsed the body, so we hash that rather than re-reading the
+   * (now-consumed) request stream.
+   */
+  idemBody?: unknown,
 ) {
   const key = c.req.header("idempotency-key");
   if (!key) {
@@ -26,10 +34,13 @@ export async function withIdempotency(
     return c.json(r.body, r.status as ContentfulStatusCode);
   }
 
+  const bodyHash = createHash("sha256")
+    .update(JSON.stringify(idemBody ?? null))
+    .digest("hex");
   const principal = ctx.keyId ?? ctx.organizationId ?? "anon";
   const scopeHash = createHash("sha256")
     .update(
-      `${ctx.organizationId}|${principal}|${c.req.method}|${new URL(c.req.url).pathname}`,
+      `${ctx.organizationId}|${principal}|${c.req.method}|${new URL(c.req.url).pathname}|${bodyHash}`,
     )
     .digest("hex");
 
