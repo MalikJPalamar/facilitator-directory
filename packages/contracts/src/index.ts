@@ -138,10 +138,28 @@ export const SCOPES = {
   directoryRead: "directory:read",
   insightsRead: "insights:read",
   leadsWrite: "leads:write",
+  leadsRead: "leads:read",
   profilesWrite: "profiles:write",
   rosterAdmin: "roster:admin",
+  reviewsWrite: "reviews:write", // approve/reject queued profile changes
+  webhooksAdmin: "webhooks:admin", // manage outbound webhook endpoints
+  keysAdmin: "keys:admin", // mint/revoke API keys (subset-mint rule applies)
+  schoolAdmin: "school:admin", // org-config reads: branding, subscription, graduates, eval-runs, claim-issue, metrics
 } as const;
-export const ALL_SCOPES = Object.values(SCOPES);
+// A literal tuple (not Object.values, which widens to string[]) so z.enum() and
+// the subset checks see the exact scope union.
+export const ALL_SCOPES = [
+  "directory:read",
+  "insights:read",
+  "leads:write",
+  "leads:read",
+  "profiles:write",
+  "roster:admin",
+  "reviews:write",
+  "webhooks:admin",
+  "keys:admin",
+  "school:admin",
+] as const satisfies readonly (typeof SCOPES)[keyof typeof SCOPES][];
 export type Scope = (typeof ALL_SCOPES)[number];
 
 /** Single error envelope for every machine route (agents code against this). */
@@ -237,6 +255,42 @@ export const RosterImport = z.object({
   issueClaimLinks: z.boolean().default(false),
 });
 export type RosterImport = z.infer<typeof RosterImport>;
+
+// ── Admin management contracts (request bodies validated at the boundary) ──────
+
+export const MetricsResult = z.object({
+  window: z.string(),
+  current: z.record(z.number()),
+  previous: z.record(z.number()),
+  delta: z.record(z.number()),
+});
+export type MetricsResult = z.infer<typeof MetricsResult>;
+
+export const ClaimTokenIssue = z.object({ profileId: z.string().uuid() });
+export type ClaimTokenIssue = z.infer<typeof ClaimTokenIssue>;
+
+export const ReviewDecision = z.object({
+  decision: z.enum(["approved", "rejected"]),
+});
+export type ReviewDecision = z.infer<typeof ReviewDecision>;
+
+export const BrandingUpdate = z.object({
+  name: z.string().max(120).optional(),
+  logo: z.string().nullable().optional(),
+  themeColor: z.string().max(32).optional(),
+  heroCopy: z.string().max(240).optional(),
+});
+export type BrandingUpdate = z.infer<typeof BrandingUpdate>;
+
+export const ApiKeyCreate = z.object({
+  name: z.string().max(120),
+  scopes: z.array(z.enum(ALL_SCOPES)),
+  expiresAt: z.string().datetime().nullable().optional(),
+});
+export type ApiKeyCreate = z.infer<typeof ApiKeyCreate>;
+
+export const WebhookToggle = z.object({ enabled: z.boolean() });
+export type WebhookToggle = z.infer<typeof WebhookToggle>;
 
 export const RosterImportResult = z.object({
   created: z.number(),

@@ -1,28 +1,57 @@
 import { capture } from "@directory/analytics";
 import { auth } from "@directory/auth";
-import { handleWebhook } from "@directory/billing";
+import { getSubscription, handleWebhook } from "@directory/billing";
 import { env } from "@directory/config";
 import {
+  ApiKeyCreate,
+  BrandingUpdate,
+  ClaimTokenIssue,
   LeadCreate,
   ProfileUpdate,
+  ReviewDecision,
   RosterImport,
   SCOPES,
+  WebhookEndpointInput,
+  WebhookToggle,
   profileToJsonLd,
   SearchQuery,
   wellKnownAffordance,
 } from "@directory/contracts";
 import {
+  BlockedUrlError,
+  ClaimError,
+  createApiKey,
   createLead,
+  createWebhookEndpoint,
+  decideReview,
+  deleteWebhookEndpoint,
+  deltaOf,
   emit,
   enqueueReview,
+  getOrganizationBranding,
+  getOwnProfileDetail,
   getProfileDetail,
   getProfileForWrite,
+  getProfileMetrics,
   getSchoolBySlug,
+  getSchoolMetrics,
   importRoster,
+  issueClaimToken,
   latestInsightDTO,
   LeadError,
+  listApiKeys,
+  listLeads,
+  listPendingReviews,
+  listRecentEvalRuns,
+  listSchoolGraduates,
+  listWebhookEndpoints,
+  previewClaim,
+  revokeApiKey,
+  rotateWebhookSecret,
   runNightly,
   searchDirectory,
+  setWebhookEndpointEnabled,
+  updateOrganizationBranding,
   updateProfile,
 } from "@directory/core";
 import { Hono } from "hono";
@@ -30,6 +59,8 @@ import { cors } from "hono/cors";
 
 import { fail } from "./errors.ts";
 import { withIdempotency } from "./idempotency.ts";
+import { requestId, requestLogger } from "./middleware/observability.ts";
+import { rateLimit } from "./middleware/rate-limit.ts";
 import { requireScope, tenant } from "./middleware/tenant.ts";
 import { openApiDocument } from "./openapi.ts";
 
@@ -41,6 +72,11 @@ import { openApiDocument } from "./openapi.ts";
  * The integration contract base URL is therefore `<origin>/api`.
  */
 export const app = new Hono().basePath("/api");
+// Request-id + structured timing wrap EVERYTHING (incl. auth + webhooks), and
+// must run first. requestId honors/emits X-Request-Id; requestLogger emits one
+// secret-free JSON line per request.
+app.use("*", requestId());
+app.use("*", requestLogger());
 app.use("*", cors());
 
 /**
@@ -57,6 +93,8 @@ app.on(["GET", "POST"], "/auth/*", (c) => auth.handler(c.req.raw));
  * headers. Public read routes ignore the result; protected routes gate on it.
  */
 app.use("/v1/*", tenant());
+// MUST be after tenant() so c.var.tenant.keyId is set (per-key vs per-IP).
+app.use("/v1/*", rateLimit());
 
 /**
  * Public origin of the current request, honouring the proxy headers Vercel sets,
@@ -86,13 +124,7 @@ app.get("/.well-known/oauth-protected-resource", (c) =>
   c.json({
     resource: `${originOf(c)}/api`,
     bearer_methods_supported: ["header"],
-    scopes_supported: [
-      SCOPES.directoryRead,
-      SCOPES.insightsRead,
-      SCOPES.leadsWrite,
-      SCOPES.profilesWrite,
-      SCOPES.rosterAdmin,
-    ],
+    scopes_supported: Object.values(SCOPES),
     token_issuance: `${originOf(c)}/admin/keys`,
     token_type: "first-party-api-key",
   }),
@@ -339,6 +371,217 @@ app.get("/v1/admin/insights", requireScope(SCOPES.insightsRead), async (c) => {
   const insight = await latestInsightDTO(organizationId, "school", null);
   if (!insight) return fail(c, 404, "not_found", "no insight yet — run the nightly loop");
   return c.json(insight);
+});
+
+// ── Metrics (admin + me) ──────────────────────────────────────────────────────
+const WINDOW_DAYS: Record<string, number> = { "7d": 7, "28d": 28, "90d": 90 };
+function windowRange(q: string | undefined): { days: number; curFrom: Date; prevFrom: Date; now: Date } {
+  const days = WINDOW_DAYS[q ?? "28d"] ?? 28;
+  const now = new Date();
+  return {
+    days,
+    now,
+    curFrom: new Date(now.getTime() - days * 864e5),
+    prevFrom: new Date(now.getTime() - 2 * days * 864e5),
+  };
+}
+
+app.get("/v1/admin/metrics", requireScope(SCOPES.schoolAdmin), async (c) => {
+  const org = c.var.tenant.organizationId!;
+  const { days, curFrom, prevFrom, now } = windowRange(c.req.query("window"));
+  const current = await getSchoolMetrics(org, curFrom, now);
+  const previous = await getSchoolMetrics(org, prevFrom, curFrom);
+  return c.json({ window: `${days}d`, current, previous, delta: deltaOf(current, previous) });
+});
+
+app.get("/v1/me/metrics", requireScope(SCOPES.insightsRead), async (c) => {
+  const { organizationId, profileId } = c.var.tenant;
+  if (!organizationId || !profileId)
+    return fail(c, 401, "unauthorized", "missing tenant/profile context");
+  const { days, curFrom, prevFrom, now } = windowRange(c.req.query("window"));
+  const current = await getProfileMetrics(profileId, curFrom, now);
+  const previous = await getProfileMetrics(profileId, prevFrom, curFrom);
+  return c.json({ window: `${days}d`, current, previous, delta: deltaOf(current, previous) });
+});
+
+// ── Graduates + own profile ───────────────────────────────────────────────────
+app.get("/v1/admin/graduates", requireScope(SCOPES.schoolAdmin), async (c) => {
+  const graduates = await listSchoolGraduates(c.var.tenant.organizationId!);
+  return c.json({ graduates });
+});
+
+app.get("/v1/me/profile", requireScope(SCOPES.profilesWrite), async (c) => {
+  const { organizationId, profileId } = c.var.tenant;
+  if (!organizationId || !profileId)
+    return fail(c, 401, "unauthorized", "missing tenant/profile context");
+  const profile = await getOwnProfileDetail({ organizationId, profileId });
+  if (!profile) return fail(c, 404, "not_found", "profile not found");
+  return c.json(profile);
+});
+
+// ── Claim (public preview + admin issue) ──────────────────────────────────────
+app.get("/v1/schools/:slug/claims/:token/preview", async (c) => {
+  const preview = await previewClaim(c.req.param("token"));
+  if (!preview) return c.json({ error: "claim not found or expired" }, 404);
+  return c.json(preview);
+});
+
+app.post("/v1/admin/claims", requireScope(SCOPES.schoolAdmin), async (c) => {
+  const ctx = c.var.tenant;
+  const parsed = ClaimTokenIssue.safeParse(await c.req.json().catch(() => ({})));
+  if (!parsed.success)
+    return fail(c, 400, "validation_error", "invalid request", parsed.error.flatten());
+  // Tenant guard: the profile must belong to the caller's org (issueClaimToken
+  // itself is not org-scoped, so verify ownership by id here).
+  const owned = await listSchoolGraduates(ctx.organizationId!);
+  if (!owned.some((g) => g.id === parsed.data.profileId))
+    return fail(c, 404, "not_found", "profile not found");
+  return withIdempotency(c, ctx, async () => {
+    try {
+      const token = await issueClaimToken(parsed.data.profileId);
+      return { status: 201, body: { token, claimUrl: `${originOf(c)}/claim/${token}` } };
+    } catch (err) {
+      if (err instanceof ClaimError)
+        return { status: 409, body: { error: { code: "conflict", message: err.message } } };
+      throw err;
+    }
+  });
+});
+
+// ── Review queue (list + decide) ──────────────────────────────────────────────
+app.get("/v1/admin/reviews", requireScope(SCOPES.reviewsWrite), async (c) => {
+  const reviews = await listPendingReviews(c.var.tenant.organizationId!);
+  return c.json({ reviews });
+});
+
+app.post("/v1/admin/reviews/:id/decision", requireScope(SCOPES.reviewsWrite), async (c) => {
+  const parsed = ReviewDecision.safeParse(await c.req.json().catch(() => ({})));
+  if (!parsed.success)
+    return fail(c, 400, "validation_error", "invalid decision", parsed.error.flatten());
+  const ok = await decideReview(
+    c.var.tenant.organizationId!,
+    c.req.param("id"),
+    parsed.data.decision,
+    c.var.tenant.keyId ?? "agent",
+  );
+  if (!ok) return fail(c, 404, "not_found", "review item not found");
+  return c.json({ ok: true });
+});
+
+// ── Eval runs (insight quality) ───────────────────────────────────────────────
+app.get("/v1/admin/eval-runs", requireScope(SCOPES.schoolAdmin), async (c) => {
+  const limit = Math.min(50, Math.max(1, Number(c.req.query("limit")) || 10));
+  const runs = await listRecentEvalRuns(limit);
+  return c.json({ runs });
+});
+
+// ── Branding (get + update) ───────────────────────────────────────────────────
+app.get("/v1/admin/branding", requireScope(SCOPES.schoolAdmin), async (c) => {
+  const branding = await getOrganizationBranding(c.var.tenant.organizationId!);
+  if (!branding) return fail(c, 404, "not_found", "organization not found");
+  return c.json(branding);
+});
+
+app.patch("/v1/admin/branding", requireScope(SCOPES.schoolAdmin), async (c) => {
+  const parsed = BrandingUpdate.safeParse(await c.req.json().catch(() => ({})));
+  if (!parsed.success)
+    return fail(c, 400, "validation_error", "invalid branding", parsed.error.flatten());
+  await updateOrganizationBranding(c.var.tenant.organizationId!, {
+    name: parsed.data.name ?? "",
+    logo: parsed.data.logo ?? "",
+    themeColor: parsed.data.themeColor ?? "",
+    heroCopy: parsed.data.heroCopy ?? "",
+  });
+  return c.json({ ok: true });
+});
+
+// ── API keys (list / create / revoke) — subset-mint rule on create ────────────
+app.get("/v1/admin/keys", requireScope(SCOPES.keysAdmin), async (c) => {
+  const keys = await listApiKeys(c.var.tenant.organizationId!);
+  return c.json({ keys });
+});
+
+app.post("/v1/admin/keys", requireScope(SCOPES.keysAdmin), async (c) => {
+  const ctx = c.var.tenant;
+  const parsed = ApiKeyCreate.safeParse(await c.req.json().catch(() => ({})));
+  if (!parsed.success)
+    return fail(c, 400, "validation_error", "invalid key request", parsed.error.flatten());
+  // SUBSET-MINT RULE: a key may only grant scopes it itself holds.
+  const ungrantable = parsed.data.scopes.filter((s) => !ctx.scopes.includes(s));
+  if (ungrantable.length)
+    return fail(c, 403, "insufficient_scope", `cannot grant scopes beyond the minting key: ${ungrantable.join(", ")}`);
+  return withIdempotency(c, ctx, async () => {
+    const { id, plaintext, prefix } = await createApiKey({
+      organizationId: ctx.organizationId!,
+      name: parsed.data.name,
+      scopes: parsed.data.scopes,
+      expiresAt: parsed.data.expiresAt ? new Date(parsed.data.expiresAt) : null,
+    });
+    return { status: 201, body: { id, prefix, plaintext } };
+  });
+});
+
+app.delete("/v1/admin/keys/:id", requireScope(SCOPES.keysAdmin), async (c) => {
+  await revokeApiKey(c.var.tenant.organizationId!, c.req.param("id"));
+  return c.json({ ok: true });
+});
+
+// ── Webhooks (list / create / toggle / rotate / delete) ───────────────────────
+app.get("/v1/admin/webhooks", requireScope(SCOPES.webhooksAdmin), async (c) => {
+  const endpoints = await listWebhookEndpoints(c.var.tenant.organizationId!);
+  return c.json({ endpoints });
+});
+
+app.post("/v1/admin/webhooks", requireScope(SCOPES.webhooksAdmin), async (c) => {
+  const parsed = WebhookEndpointInput.safeParse(await c.req.json().catch(() => ({})));
+  if (!parsed.success)
+    return fail(c, 400, "validation_error", "invalid endpoint", parsed.error.flatten());
+  try {
+    const { id, secret } = await createWebhookEndpoint({
+      organizationId: c.var.tenant.organizationId!,
+      url: parsed.data.url,
+      events: parsed.data.events,
+      description: parsed.data.description,
+    });
+    return c.json({ id, secret }, 201); // secret returned ONCE
+  } catch (err) {
+    if (err instanceof BlockedUrlError) return fail(c, 422, "validation_error", err.message);
+    throw err;
+  }
+});
+
+app.patch("/v1/admin/webhooks/:id", requireScope(SCOPES.webhooksAdmin), async (c) => {
+  const parsed = WebhookToggle.safeParse(await c.req.json().catch(() => ({})));
+  if (!parsed.success)
+    return fail(c, 400, "validation_error", "invalid toggle", parsed.error.flatten());
+  await setWebhookEndpointEnabled(c.var.tenant.organizationId!, c.req.param("id"), parsed.data.enabled);
+  return c.json({ ok: true });
+});
+
+app.post("/v1/admin/webhooks/:id/rotate", requireScope(SCOPES.webhooksAdmin), async (c) => {
+  const secret = await rotateWebhookSecret(c.var.tenant.organizationId!, c.req.param("id"));
+  if (!secret) return fail(c, 404, "not_found", "endpoint not found");
+  return c.json({ secret });
+});
+
+app.delete("/v1/admin/webhooks/:id", requireScope(SCOPES.webhooksAdmin), async (c) => {
+  await deleteWebhookEndpoint(c.var.tenant.organizationId!, c.req.param("id"));
+  return c.json({ ok: true });
+});
+
+// ── Leads list (admin) ────────────────────────────────────────────────────────
+app.get("/v1/admin/leads", requireScope(SCOPES.leadsRead), async (c) => {
+  const limit = Math.min(500, Math.max(1, Number(c.req.query("limit")) || 100));
+  const leads = await listLeads(c.var.tenant.organizationId!, limit);
+  return c.json({ leads });
+});
+
+// ── Subscription status (admin read-only) ─────────────────────────────────────
+app.get("/v1/admin/subscription", requireScope(SCOPES.schoolAdmin), async (c) => {
+  const sub = await getSubscription(c.var.tenant.organizationId!);
+  return c.json(
+    sub ?? { status: "none", plan: "school_membership", seats: 0, currentPeriodEnd: null, stripeCustomerId: null },
+  );
 });
 
 // ── Billing webhook (Stripe) ──────────────────────────────────────────────────

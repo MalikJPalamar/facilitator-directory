@@ -1,5 +1,5 @@
 import { runEvals } from "@directory/ai";
-import { and, db, eq, tables } from "@directory/db";
+import { and, db, eq, sql, tables } from "@directory/db";
 
 import { runInsightForProfile, runInsightForSchool } from "./insight-service.ts";
 import { sweepWebhookDeliveries } from "./webhooks.ts";
@@ -96,5 +96,15 @@ export async function runNightly(now = new Date()): Promise<void> {
     console.log(`✓ webhook sweep retried ${swept} due deliveries.`);
   } catch (err) {
     console.error("⚠ webhook sweep skipped (nightly unaffected):", err);
+  }
+
+  // Prune expired rate-limit buckets (older than a day). Disposable rows — the
+  // window key already ignores stale buckets, so failure here is harmless.
+  try {
+    await db.execute(
+      sql`delete from rate_limit where window_start < now() - interval '1 day'`,
+    );
+  } catch (err) {
+    console.error("⚠ rate_limit prune skipped (nightly unaffected):", err);
   }
 }

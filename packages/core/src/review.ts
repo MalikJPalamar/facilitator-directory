@@ -41,12 +41,24 @@ export async function listPendingReviews(organizationId: string) {
 }
 
 export async function decideReview(
+  organizationId: string,
   reviewItemId: string,
   decision: "approved" | "rejected",
   decidedBy: string,
-): Promise<void> {
-  await db
+): Promise<boolean> {
+  // Tenant-scoped: an org can only decide its OWN review items. Returns false
+  // when the id doesn't match a pending item in this org (caller -> 404), so a
+  // cross-tenant id can't be silently mutated or probed as a 200.
+  const rows = await db
     .update(tables.reviewItem)
     .set({ status: decision, decidedBy, decidedAt: new Date() })
-    .where(eq(tables.reviewItem.id, reviewItemId));
+    .where(
+      and(
+        eq(tables.reviewItem.id, reviewItemId),
+        eq(tables.reviewItem.organizationId, organizationId),
+        eq(tables.reviewItem.status, "pending"),
+      ),
+    )
+    .returning({ id: tables.reviewItem.id });
+  return rows.length > 0;
 }

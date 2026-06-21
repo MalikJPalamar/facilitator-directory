@@ -105,9 +105,57 @@ export function openApiDocument(baseUrl: string) {
           responses: { ...ok("Insight"), ...errs() },
         },
       },
+      "/v1/schools/{slug}/claims/{token}/preview": {
+        get: {
+          summary: "Preview a claim token (public — the human-claim flow's read side)",
+          parameters: [pathParam("slug"), pathParam("token")],
+          responses: { ...ok("ClaimPreview"), "404": { description: "not found / expired" } },
+        },
+      },
+      "/v1/admin/metrics": adminGet("School engagement metrics + delta. Scope: school:admin", [q("window", "7d | 28d | 90d")]),
+      "/v1/me/metrics": adminGet("The graduate's own metrics + delta. Scope: insights:read", [q("window", "7d | 28d | 90d")]),
+      "/v1/admin/graduates": adminGet("List the school's graduate profiles. Scope: school:admin"),
+      "/v1/me/profile": adminGet("The graduate's own editable profile. Scope: profiles:write"),
+      "/v1/admin/eval-runs": adminGet("Recent eval runs (insight quality). Scope: school:admin", [q("limit", "max 50")]),
+      "/v1/admin/leads": adminGet("List inbound leads. Scope: leads:read", [q("limit", "max 500")]),
+      "/v1/admin/subscription": adminGet("Subscription status (read-only). Scope: school:admin"),
+      "/v1/admin/branding": {
+        get: { summary: "Get school branding. Scope: school:admin", security: [{ apiKey: [] }], responses: { ...ok("Branding"), ...errs() } },
+        patch: { summary: "Update school branding. Scope: school:admin", security: [{ apiKey: [] }], requestBody: jsonBody("BrandingUpdate"), responses: { ...ok("Ack"), ...errs() } },
+      },
+      "/v1/admin/claims": {
+        post: { summary: "Issue a single-use claim token for a profile. Scope: school:admin", security: [{ apiKey: [] }], parameters: [idempotencyHeader()], requestBody: jsonBody("ClaimTokenIssue"), responses: { ...created("ClaimToken"), ...errs() } },
+      },
+      "/v1/admin/reviews": adminGet("List pending profile-change reviews. Scope: reviews:write"),
+      "/v1/admin/reviews/{id}/decision": {
+        post: { summary: "Approve/reject a queued change. Scope: reviews:write", security: [{ apiKey: [] }], parameters: [pathParam("id")], requestBody: jsonBody("ReviewDecision"), responses: { ...ok("Ack"), ...errs() } },
+      },
+      "/v1/admin/keys": {
+        get: { summary: "List API keys. Scope: keys:admin", security: [{ apiKey: [] }], responses: { ...ok("ApiKeyList"), ...errs() } },
+        post: { summary: "Mint an API key (scopes ⊆ minting key). Scope: keys:admin", security: [{ apiKey: [] }], parameters: [idempotencyHeader()], requestBody: jsonBody("ApiKeyCreate"), responses: { ...created("ApiKeyCreateResult"), ...errs() } },
+      },
+      "/v1/admin/keys/{id}": {
+        delete: { summary: "Revoke an API key. Scope: keys:admin", security: [{ apiKey: [] }], parameters: [pathParam("id")], responses: { ...ok("Ack"), ...errs() } },
+      },
+      "/v1/admin/webhooks": {
+        get: { summary: "List webhook endpoints. Scope: webhooks:admin", security: [{ apiKey: [] }], responses: { ...ok("WebhookList"), ...errs() } },
+        post: { summary: "Register a webhook endpoint (returns secret once). Scope: webhooks:admin", security: [{ apiKey: [] }], requestBody: jsonBody("WebhookEndpointInput"), responses: { ...created("WebhookSecret"), ...errs() } },
+      },
+      "/v1/admin/webhooks/{id}": {
+        patch: { summary: "Enable/disable an endpoint. Scope: webhooks:admin", security: [{ apiKey: [] }], parameters: [pathParam("id")], requestBody: jsonBody("WebhookToggle"), responses: { ...ok("Ack"), ...errs() } },
+        delete: { summary: "Delete an endpoint. Scope: webhooks:admin", security: [{ apiKey: [] }], parameters: [pathParam("id")], responses: { ...ok("Ack"), ...errs() } },
+      },
+      "/v1/admin/webhooks/{id}/rotate": {
+        post: { summary: "Rotate an endpoint's signing secret (returns secret once). Scope: webhooks:admin", security: [{ apiKey: [] }], parameters: [pathParam("id")], responses: { ...ok("WebhookSecret"), ...errs() } },
+      },
     },
   };
 }
+
+/** A scope-gated admin GET path entry (bearer + standard error envelopes). */
+const adminGet = (summary: string, parameters: unknown[] = []) => ({
+  get: { summary, security: [{ apiKey: [] }], parameters, responses: { ...ok("OK"), ...errs() } },
+});
 
 const pathParam = (name: string) => ({
   name,
@@ -144,4 +192,5 @@ const errs = () => ({
   "401": { description: "unauthorized (ErrorEnvelope)" },
   "403": { description: "insufficient_scope (ErrorEnvelope)" },
   "404": { description: "not_found (ErrorEnvelope)" },
+  "429": { description: "rate_limited (ErrorEnvelope); see RateLimit-* + Retry-After headers" },
 });

@@ -174,3 +174,36 @@ export const idempotencyKey = pgTable(
   },
   (t) => [uniqueIndex("idempotency_key_uq").on(t.scopeHash, t.key)],
 );
+
+// ── Rate limiting (Postgres fixed-window; no Redis) ────────────────────────────
+
+/**
+ * One counter row per (subject, route_class, window_start). The window bucket is
+ * computed app-side; each request does a single atomic INSERT … ON CONFLICT DO
+ * UPDATE … RETURNING, so concurrent serverless invocations increment safely.
+ * Expired rows are disposable — pruned by the nightly loop.
+ *
+ * NOT in ORG_SCOPED_TABLES: the subject for anonymous traffic is an IP (no
+ * organization_id), and the limiter runs before/without tenant GUC context —
+ * same rationale as idempotency_key + api_key.
+ */
+export const rateLimit = pgTable(
+  "rate_limit",
+  {
+    // "key:<apiKeyId>" for authed callers, "ip:<addr>" for anonymous. Opaque —
+    // never the dk_ secret (only the api_key.id is ever used).
+    subject: text("subject").notNull(),
+    routeClass: text("route_class").notNull(), // read | write | search
+    windowStart: timestamp("window_start").notNull(),
+    count: integer("count").notNull().default(0),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("rate_limit_window_uq").on(
+      t.subject,
+      t.routeClass,
+      t.windowStart,
+    ),
+    index("rate_limit_window_idx").on(t.windowStart),
+  ],
+);
