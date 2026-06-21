@@ -73,9 +73,6 @@ const EnvSchema = z.object({
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
   STRIPE_PRICE_ID: z.string().optional(),
 
-  // Scheduling (Vercel Cron sends `Authorization: Bearer ${CRON_SECRET}`)
-  CRON_SECRET: z.string().optional(),
-
   // Email (Resend HTTP API). EMAIL_FROM is like 'The Directory <onboarding@yourdomain>'.
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().optional(),
