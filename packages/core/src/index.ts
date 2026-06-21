@@ -37,3 +37,4 @@ export {
 // not @directory/ai directly) can persist nightly eval runs.
 export { runEvals, type EvalResult } from "@directory/ai";
 export { listRecentEvalRuns, type EvalRunRow } from "./eval-runs.ts";
+export { runNightly } from "./nightly.ts";

@@ -70,6 +70,9 @@ const EnvSchema = z.object({
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
   STRIPE_PRICE_ID: z.string().optional(),
 
+  // Scheduling (Vercel Cron sends `Authorization: Bearer ${CRON_SECRET}`)
+  CRON_SECRET: z.string().optional(),
+
   // Analytics
   POSTHOG_API_KEY: z.string().optional(),
   POSTHOG_HOST: z.string().default("https://us.i.posthog.com"),

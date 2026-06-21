@@ -11,6 +11,7 @@ import {
   getProfileDetail,
   getSchoolBySlug,
   latestInsightDTO,
+  runNightly,
   searchDirectory,
 } from "@directory/core";
 import { Hono } from "hono";
@@ -181,4 +182,20 @@ app.post("/webhooks/stripe", async (c) => {
   } catch (err) {
     return c.json({ error: (err as Error).message }, 400);
   }
+});
+
+// ── Scheduled nightly LEARN loop (Vercel Cron) ────────────────────────────────
+// vercel.json schedules a hit here; when CRON_SECRET is set in the project,
+// Vercel includes `Authorization: Bearer <CRON_SECRET>`. Fail CLOSED — the loop
+// never runs until that secret is configured. NOTE: this runs the loop inside a
+// serverless invocation, which suits demo/small-tenant scale; for large
+// Claude-backed runs use the always-on worker (apps/worker / render.yaml), which
+// has no function-duration limit.
+app.get("/intelligence/nightly", async (c) => {
+  const secret = env.CRON_SECRET;
+  if (!secret || c.req.header("authorization") !== `Bearer ${secret}`) {
+    return c.json({ error: "unauthorized" }, 401);
+  }
+  await runNightly();
+  return c.json({ ok: true });
 });
