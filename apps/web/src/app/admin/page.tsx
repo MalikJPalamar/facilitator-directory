@@ -59,8 +59,9 @@ export default async function AdminPage({
         </span>
       </div>
       <h1>School admin</h1>
-      <p style={{ marginTop: 0 }}>
+      <p style={{ marginTop: 0, display: "flex", gap: "var(--space-2)", flexWrap: "wrap" }}>
         <a className="btn btn-outline" href="/admin/settings">School settings</a>
+        <a className="btn btn-outline" href="/admin/keys">API keys</a>
       </p>
 
       {checkout === "success" && (
