@@ -3,6 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./nightly": "./src/nightly.ts"
+  },
   "scripts": {
     "nightly": "tsx src/nightly.ts",
     "journey": "tsx src/journey.ts",

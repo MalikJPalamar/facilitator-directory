@@ -43,9 +43,9 @@ Prove the slice runs end-to-end against real infrastructure.
 - [x] **Deploy compute (web/api)** — single Vercel app with embedded API, **live in production** 2026-06-19 (commit `49d3de8`). Fixes: lazy Postgres client so `next build` never parses `DATABASE_URL`; config tolerates quoted/whitespace `DATABASE_URL`; `DEMO_ORG_ID` declared in `turbo.json`. Verified: prod `/api/v1/schools/breathwork-global` + `/search` return live Neon data. _(mcp/worker still to deploy.)_
 - [x] **MCP server reachable over streamable HTTP** — mounted in the single-Vercel deploy at `<origin>/mcp` via `mcp-handler` (stateless), tools call `@directory/core` directly; advertised in `/api/.well-known/ai-directory.json` (origin-derived). Verified locally: initialize + tools/list + tools/call. _(Needs Vercel Deployment Protection off for true external reach — infra toggle.)_
 - [x] **Auth end-to-end** — Better Auth (email/password + organization plugin) mounted in Hono at `/api/auth/*`; login/signup UI; session → membership resolves org + role; `/admin` (owner/admin) and `/me` (graduate) gated + tenant-scoped, replacing `DEMO_ORG_ID`; `/dashboard` role-routes; demo logins seeded (`pnpm --filter @directory/auth seed:demo`). Verified end-to-end against Neon.
-- [x] Analytics events landing in the durable stream + (optional) PostHog _(verified 2026-06-21: `capture()` writes `analytics_event` (analytics/src/index.ts), wired across web/API/MCP, consumed by insight-service SENSE; PostHog optional behind `POSTHOG_API_KEY`)_
-- [ ] Nightly loop scheduled as infra cron against the hosted DB
-**Exit:** the founder can demo search + a profile + the AI coaching dashboard from a public URL.
+- [x] **Analytics events landing in the durable stream + (optional) PostHog** — `capture()` writes every interaction to the durable `analytics_event` Postgres stream and best-effort mirrors to PostHog when `POSTHOG_API_KEY` is set. Verified live (search/profile_view rows accrue).
+- [x] **Nightly loop scheduled as cron** — Vercel Cron (`vercel.json`, 03:00 daily) → protected `/api/cron/nightly` (Bearer `CRON_SECRET`) runs `runNightly()` against Neon. Set `CRON_SECRET` in Vercel to arm it.
+**Exit:** the founder can demo search + a profile + the AI coaching dashboard from a public URL. — **MET** (auth-gated dashboards live).
 **Note:** no connected MCP can set Vercel/host env secrets — `DATABASE_URL` + `ANTHROPIC_API_KEY` are set once by the founder in the host dashboard.
 
 ### M3 — Design-Partner Prototype / Private Beta — **T+28d · 2026-07-17** _(T-prototype)_
@@ -89,4 +89,4 @@ There is **no autonomous cross-session scheduler** in this environment. Cadence 
 3. **This file** — the source of truth; update the checkboxes and dates as milestones move.
 4. **(Optional) ClickUp reminders** — to ping the founder at each T-date.
 
-_Last updated: 2026-06-21 — M3 autonomous build pass: billing upsert fix, claim+onboarding+eval-surfacing shipped on `feat/m3-stripe`; remaining M3 items are human-gated (real keys/partners) or scheduled-infra._
+_Last updated: 2026-06-21 — Universal API pass (PR #12): complete REST coverage of every feature (admin keys/webhooks/branding/reviews/metrics/leads/subscription + write/ingest), org-scoped API-key auth + scopes, outbound CRM webhooks, rate limiting + request logging, MCP tool expansion, new `@directory/cli`, Vitest suite (46), two adversarial security reviews. Remaining M3/M4 items are human-gated (real Stripe keys/partners, prod RLS role, Deployment-Protection toggle, custom domain)._

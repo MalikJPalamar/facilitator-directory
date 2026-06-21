@@ -65,6 +65,9 @@ const EnvSchema = z.object({
   // MCP
   MCP_PORT: z.coerce.number().default(8788),
 
+  // Cron — shared secret Vercel Cron sends as `Authorization: Bearer <secret>`.
+  CRON_SECRET: z.string().optional(),
+
   // Stripe
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
