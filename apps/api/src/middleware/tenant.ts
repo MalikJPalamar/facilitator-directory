@@ -53,8 +53,12 @@ export const tenant = (): MiddlewareHandler => async (c, next) => {
     return next();
   }
 
-  if (env.NODE_ENV !== "production") {
-    // DEV ONLY: legacy header trust for the local journey/test kit.
+  // DEV-ONLY legacy header trust for the local journey/test kit. Gated on an
+  // EXPLICIT opt-in (ALLOW_DEV_HEADER_AUTH=1) — NOT merely on NODE_ENV — so a
+  // misconfigured deploy where NODE_ENV is unset/defaulted (e.g. Render, which
+  // doesn't set it) can NEVER reopen this unauthenticated backdoor in prod.
+  // Belt-and-suspenders: require BOTH non-production AND the flag.
+  if (env.NODE_ENV !== "production" && process.env.ALLOW_DEV_HEADER_AUTH === "1") {
     c.set("tenant", {
       organizationId: c.req.header("x-org-id"),
       profileId: c.req.header("x-graduate-profile-id"),

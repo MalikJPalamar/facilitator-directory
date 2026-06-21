@@ -48,16 +48,24 @@ export function verifySignature(
   header: string,
   toleranceSec = 300,
 ): boolean {
-  const parts = Object.fromEntries(
-    header.split(",").map((p) => p.split("=") as [string, string]),
-  );
+  // Parse defensively — a malformed header (missing t/v1, stray '='/commas) must
+  // cleanly return false, never throw (receivers reuse this on attacker input).
+  if (typeof header !== "string") return false;
+  const parts: Record<string, string> = {};
+  for (const segment of header.split(",")) {
+    const eq = segment.indexOf("=");
+    if (eq <= 0) continue;
+    parts[segment.slice(0, eq).trim()] = segment.slice(eq + 1).trim();
+  }
   const t = Number(parts.t);
-  if (!t || Math.abs(Date.now() / 1000 - t) > toleranceSec) return false;
+  if (!Number.isFinite(t) || !t) return false;
+  if (Math.abs(Date.now() / 1000 - t) > toleranceSec) return false;
+  if (!parts.v1) return false;
   const expected = createHmac("sha256", secret)
     .update(`${t}.${rawBody}`)
     .digest("hex");
   const a = Buffer.from(expected);
-  const b = Buffer.from(parts.v1 ?? "");
+  const b = Buffer.from(parts.v1);
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
@@ -128,7 +136,15 @@ async function deliverOne(deliveryId: string): Promise<void> {
   const [ep] = await db
     .select()
     .from(tables.webhookEndpoint)
-    .where(eq(tables.webhookEndpoint.id, d.endpointId))
+    .where(
+      and(
+        eq(tables.webhookEndpoint.id, d.endpointId),
+        // Org-scope the lookup explicitly. RLS is not enforced for the runtime
+        // DB role (owner), so this WHERE — not a policy — is the tenant boundary
+        // that guarantees a delivery only ever uses its own org's endpoint.
+        eq(tables.webhookEndpoint.organizationId, d.organizationId),
+      ),
+    )
     .limit(1);
   if (!ep || !ep.enabled) return;
 
@@ -156,6 +172,9 @@ async function deliverOne(deliveryId: string): Promise<void> {
     const res = await fetch(ep.url, {
       method: "POST",
       signal: ctrl.signal,
+      // Don't follow redirects: a 30x could bounce the signed POST to an
+      // internal URL AFTER the assertPublicHttpsUrl check (DNS-rebind / SSRF).
+      redirect: "manual",
       headers: {
         "content-type": "application/json",
         "directory-signature": signPayload(ep.secret, body, ts),

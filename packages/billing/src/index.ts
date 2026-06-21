@@ -97,14 +97,23 @@ export async function handleWebhook(
   signature: string | undefined,
 ): Promise<{ received: true }> {
   let event: Stripe.Event;
-  if (env.STRIPE_WEBHOOK_SECRET && signature) {
+  if (env.STRIPE_WEBHOOK_SECRET) {
+    // Verified path: always required when a signing secret is configured.
+    if (!signature) throw new Error("missing stripe-signature header");
     event = stripe().webhooks.constructEvent(
       rawBody,
       signature,
       env.STRIPE_WEBHOOK_SECRET,
     );
-  } else {
+  } else if (env.NODE_ENV !== "production" && !env.STRIPE_SECRET_KEY) {
+    // Local-dev escape hatch ONLY: no Stripe configured at all. In production —
+    // or whenever Stripe IS wired — we FAIL CLOSED rather than trust unsigned
+    // JSON, so a forged event can't mint/cancel a paid subscription.
     event = JSON.parse(rawBody) as Stripe.Event;
+  } else {
+    throw new Error(
+      "STRIPE_WEBHOOK_SECRET is required to verify webhooks (refusing unsigned event)",
+    );
   }
 
   // Idempotency: skip if we've already recorded this event id.

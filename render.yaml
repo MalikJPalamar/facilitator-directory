@@ -9,6 +9,10 @@ services:
     buildCommand: pnpm install --frozen-lockfile
     startCommand: pnpm --filter @directory/api start
     envVars:
+      # Render does not set NODE_ENV; set it explicitly so the API can never fall
+      # into the dev header-auth path (which now also requires ALLOW_DEV_HEADER_AUTH=1).
+      - key: NODE_ENV
+        value: production
       - key: DATABASE_URL
         fromDatabase: { name: directory-db, property: connectionString }
       - key: ANTHROPIC_API_KEY
@@ -28,6 +32,8 @@ services:
     buildCommand: pnpm install --frozen-lockfile
     startCommand: pnpm --filter @directory/mcp start
     envVars:
+      - key: NODE_ENV
+        value: production
       - key: DATABASE_URL
         fromDatabase: { name: directory-db, property: connectionString }
 
@@ -37,6 +43,8 @@ services:
     buildCommand: pnpm install --frozen-lockfile
     startCommand: pnpm --filter @directory/worker start
     envVars:
+      - key: NODE_ENV
+        value: production
       - key: DATABASE_URL
         fromDatabase: { name: directory-db, property: connectionString }
       - key: ANTHROPIC_API_KEY

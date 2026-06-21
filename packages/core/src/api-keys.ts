@@ -1,5 +1,6 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 
+import { ALL_SCOPES } from "@directory/contracts";
 import { and, db, eq, isNull, tables } from "@directory/db";
 
 /**
@@ -47,13 +48,18 @@ export async function createApiKey(input: {
   const plaintext = `${PREFIX}${secret}`;
   const id = randomUUID();
   const prefix = `${PREFIX}${secret.slice(0, 6)}`; // display only
+  // Defense-in-depth: the trust boundary must not live only in the UI/route.
+  // Persist ONLY known scopes so a future caller can't store arbitrary/over-broad
+  // scope strings (the route layer additionally enforces the subset-mint rule).
+  const known = new Set<string>(ALL_SCOPES);
+  const scopes = input.scopes.filter((s) => known.has(s));
   await db.insert(tables.apiKey).values({
     id,
     organizationId: input.organizationId,
     name: input.name,
     prefix,
     keyHash: sha256(plaintext),
-    scopes: input.scopes,
+    scopes,
     createdByUserId: input.createdByUserId ?? null,
     expiresAt: input.expiresAt ?? null,
   });
