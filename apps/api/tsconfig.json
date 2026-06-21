@@ -1,5 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": { "rootDir": "src", "outDir": "dist", "types": ["node"] },
-  "include": ["src"]
+  // No rootDir: the IDOR test imports the shared DB test helper from
+  // packages/core/src; rootDir is vestigial here (noEmit) and would block it.
+  "compilerOptions": { "outDir": "dist", "types": ["node"] },
+  "include": ["src", "../../packages/core/src/test-utils.ts"]
 }
