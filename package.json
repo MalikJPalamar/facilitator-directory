@@ -19,7 +19,8 @@
     "infra:up": "docker compose up -d",
     "infra:down": "docker compose down",
     "intelligence:nightly": "pnpm --filter @directory/worker nightly",
-    "journey": "pnpm --filter @directory/worker journey"
+    "journey": "pnpm --filter @directory/worker journey",
+    "provision-school": "pnpm --filter @directory/worker provision"
   },
   "devDependencies": {
     "turbo": "^2.3.3",
