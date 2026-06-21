@@ -3,4 +3,5 @@ export * from "./auth.ts";
 export * from "./marketplace.ts";
 export * from "./billing.ts";
 export * from "./intelligence.ts";
+export * from "./integrations.ts";
 export { VECTOR_DIMENSIONS } from "./_custom.ts";

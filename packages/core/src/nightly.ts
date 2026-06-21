@@ -2,6 +2,7 @@ import { runEvals } from "@directory/ai";
 import { and, db, eq, tables } from "@directory/db";
 
 import { runInsightForProfile, runInsightForSchool } from "./insight-service.ts";
+import { sweepWebhookDeliveries } from "./webhooks.ts";
 
 /**
  * The nightly iterative loop (the LEARN cycle).
@@ -86,5 +87,14 @@ export async function runNightly(now = new Date()): Promise<void> {
     );
   } catch (err) {
     console.error("⚠ eval run skipped (nightly insights unaffected):", err);
+  }
+
+  // Retry any webhook deliveries that didn't land on the first fire-and-forget
+  // attempt. This is the durable at-least-once guarantee. Never abort nightly.
+  try {
+    const swept = await sweepWebhookDeliveries(now);
+    console.log(`✓ webhook sweep retried ${swept} due deliveries.`);
+  } catch (err) {
+    console.error("⚠ webhook sweep skipped (nightly unaffected):", err);
   }
 }

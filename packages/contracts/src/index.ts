@@ -128,4 +128,129 @@ export const InsightDTO = z.object({
 });
 export type InsightDTO = z.infer<typeof InsightDTO>;
 
+// ── Machine API: scopes, errors, webhooks, write/ingest ────────────────────────
+
+/**
+ * Scopes an org-scoped API key can carry. Public read routes need no token;
+ * a token still grants attribution. Writes require the matching scope.
+ */
+export const SCOPES = {
+  directoryRead: "directory:read",
+  insightsRead: "insights:read",
+  leadsWrite: "leads:write",
+  profilesWrite: "profiles:write",
+  rosterAdmin: "roster:admin",
+} as const;
+export const ALL_SCOPES = Object.values(SCOPES);
+export type Scope = (typeof ALL_SCOPES)[number];
+
+/** Single error envelope for every machine route (agents code against this). */
+export const ErrorEnvelope = z.object({
+  error: z.object({
+    code: z.string(),
+    message: z.string(),
+    details: z.unknown().optional(),
+  }),
+});
+export type ErrorEnvelope = z.infer<typeof ErrorEnvelope>;
+
+/** Canonical outbound event names a CRM can subscribe to. */
+export const WEBHOOK_EVENTS = [
+  "profile.claimed",
+  "profile.published",
+  "profile.updated",
+  "contact.requested",
+  "lead.created",
+  "search.performed",
+] as const;
+export type WebhookEvent = (typeof WEBHOOK_EVENTS)[number];
+
+export const WebhookEndpointInput = z.object({
+  url: z.string().url().refine((u) => u.startsWith("https://"), {
+    message: "url must be https://",
+  }),
+  // [] / ["*"] = all events; else a subset of WEBHOOK_EVENTS.
+  events: z.array(z.enum(WEBHOOK_EVENTS)).default([]),
+  description: z.string().max(200).optional(),
+});
+export type WebhookEndpointInput = z.infer<typeof WebhookEndpointInput>;
+
+export const WebhookEndpointView = z.object({
+  id: z.string().uuid(),
+  url: z.string(),
+  events: z.array(z.string()),
+  enabled: z.boolean(),
+  description: z.string().nullable(),
+  createdAt: z.string(),
+});
+export type WebhookEndpointView = z.infer<typeof WebhookEndpointView>;
+
+// ── Inbound leads (written by agents/CRMs) ─────────────────────────────────────
+
+export const LeadCreate = z
+  .object({
+    // target a graduate; omit => school-level lead
+    profileSlug: z.string().optional(),
+    contactName: z.string().max(200).optional(),
+    contactEmail: z.string().email().optional(),
+    contactPhone: z.string().max(40).optional(),
+    message: z.string().max(4000).optional(),
+    kind: z
+      .enum(["contact_request", "booking_intent", "inquiry"])
+      .default("contact_request"),
+    source: z.string().max(80).optional(), // e.g. "crm:hubspot"
+    props: z.record(z.unknown()).optional(),
+  })
+  .refine((v) => v.contactEmail || v.contactPhone || v.message, {
+    message: "at least one of contactEmail, contactPhone, message is required",
+  });
+export type LeadCreate = z.infer<typeof LeadCreate>;
+
+export const Lead = z.object({
+  id: z.string().uuid(),
+  kind: z.string(),
+  status: z.string(),
+  createdAt: z.string(),
+});
+export type Lead = z.infer<typeof Lead>;
+
+// ── Bulk roster import (admin scope) ───────────────────────────────────────────
+
+export const RosterFacilitator = z.object({
+  slug: z.string(),
+  displayName: z.string(),
+  email: z.string().email().optional(),
+  headline: z.string().optional(),
+  bio: z.string().optional(),
+  modalities: z.array(z.string()).optional(),
+  city: z.string().optional(),
+  country: z.string().optional(),
+  lat: z.number().optional(),
+  lng: z.number().optional(),
+  online: z.boolean().optional(),
+  program: z.string().optional(),
+});
+export type RosterFacilitator = z.infer<typeof RosterFacilitator>;
+
+export const RosterImport = z.object({
+  facilitators: z.array(RosterFacilitator).min(1).max(500),
+  issueClaimLinks: z.boolean().default(false),
+});
+export type RosterImport = z.infer<typeof RosterImport>;
+
+export const RosterImportResult = z.object({
+  created: z.number(),
+  updated: z.number(),
+  skipped: z.number(),
+  profiles: z.array(
+    z.object({
+      slug: z.string(),
+      id: z.string().uuid(),
+      status: z.string(),
+      claimUrl: z.string().optional(),
+    }),
+  ),
+});
+export type RosterImportResult = z.infer<typeof RosterImportResult>;
+
 export * from "./jsonld.ts";

@@ -2,6 +2,8 @@ import { randomBytes, randomUUID } from "node:crypto";
 
 import { and, db, eq, isNull, tables } from "@directory/db";
 
+import { emit } from "./webhooks.ts";
+
 /**
  * Self-serve profile claim. A school seeds/invites a `graduate_profile` and
  * hands the real graduate a single-use claim link. Claiming binds the graduate's
@@ -102,7 +104,7 @@ export async function claimProfile(opts: {
   // One transaction so a race-loser (or a re-claim attempt) leaves no orphan
   // member: if the compare-and-set burn matches zero rows we throw, which rolls
   // back any membership inserted above.
-  return db.transaction(async (tx) => {
+  const slug = await db.transaction(async (tx) => {
     // Reuse an existing (userId, orgId) membership, else create one.
     const [existingMember] = await tx
       .select({ id: tables.member.id })
@@ -154,4 +156,12 @@ export async function claimProfile(opts: {
 
     return preview.slug;
   });
+
+  // Notify the school's CRM that a graduate claimed their profile (best-effort).
+  void emit({
+    organizationId: preview.organizationId,
+    type: "profile.claimed",
+    data: { profileId: preview.profileId, slug: preview.slug },
+  });
+  return slug;
 }

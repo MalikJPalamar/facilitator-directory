@@ -9,6 +9,7 @@ export {
   getSchoolBySlug,
   getProfileDetail,
   getOwnProfileDetail,
+  getProfileForWrite,
   updateProfile,
   profileEmbeddingText,
   listSchoolGraduates,
@@ -44,3 +45,26 @@ export {
   updateOrganizationBranding,
   type OrgBranding,
 } from "./organizations.ts";
+export {
+  createApiKey,
+  verifyApiKey,
+  listApiKeys,
+  revokeApiKey,
+  type ScopedKey,
+  type ApiKeyRow,
+} from "./api-keys.ts";
+export {
+  emit,
+  signPayload,
+  verifySignature,
+  generateWebhookSecret,
+  sweepWebhookDeliveries,
+  listWebhookEndpoints,
+  createWebhookEndpoint,
+  setWebhookEndpointEnabled,
+  rotateWebhookSecret,
+  deleteWebhookEndpoint,
+  type WebhookEndpointRow,
+} from "./webhooks.ts";
+export { createLead, listLeads, LeadError } from "./leads.ts";
+export { importRoster } from "./roster.ts";

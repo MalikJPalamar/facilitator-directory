@@ -7,6 +7,8 @@ import {
 } from "@directory/contracts";
 import { and, asc, db, eq, sql, tables } from "@directory/db";
 
+import { emit } from "./webhooks.ts";
+
 export async function getSchoolBySlug(
   slug: string,
 ): Promise<(SchoolPublic & { id: string }) | null> {
@@ -227,6 +229,9 @@ export async function updateProfile(
     }),
   );
 
+  const wasPublished = existing.status === "published";
+  const newStatus = patch.status ?? existing.status;
+
   await db
     .update(tables.graduateProfile)
     .set({
@@ -236,9 +241,46 @@ export async function updateProfile(
       links: patch.links ?? existing.links,
       acceptingClients: patch.acceptingClients ?? existing.acceptingClients,
       theme: patch.theme ?? existing.theme,
-      status: patch.status ?? existing.status,
+      status: newStatus,
       embedding,
       updatedAt: new Date(),
     })
     .where(eq(tables.graduateProfile.id, profileId));
+
+  // Outbound webhooks (best-effort): every edit emits profile.updated; the
+  // draft/hidden -> published transition additionally emits profile.published.
+  // updateProfile is the single write path for status, so this is authoritative.
+  void emit({ organizationId, type: "profile.updated", data: { profileId } });
+  if (!wasPublished && newStatus === "published") {
+    void emit({
+      organizationId,
+      type: "profile.published",
+      data: { profileId, slug: existing.slug },
+    });
+  }
+}
+
+/**
+ * Resolve a profile by slug for an authenticated WRITE (any status, so drafts
+ * and hidden profiles are reachable by an admin/agent editor). Tenant-scoped.
+ */
+export async function getProfileForWrite(
+  organizationId: string,
+  slug: string,
+): Promise<{ id: string; status: ProfileStatus } | null> {
+  const [p] = await db
+    .select({
+      id: tables.graduateProfile.id,
+      status: tables.graduateProfile.status,
+    })
+    .from(tables.graduateProfile)
+    .where(
+      and(
+        eq(tables.graduateProfile.organizationId, organizationId),
+        eq(tables.graduateProfile.slug, slug),
+      ),
+    )
+    .limit(1);
+  if (!p) return null;
+  return { id: p.id, status: p.status as ProfileStatus };
 }

@@ -15,6 +15,7 @@ export const EVENT_TYPES = [
   "booking_intent",
   "agent_query",
   "profile_published",
+  "lead_created",
 ] as const;
 export type EventType = (typeof EVENT_TYPES)[number];
 
