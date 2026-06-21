@@ -11,18 +11,20 @@
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",
     "lint": "echo 'no lint'",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@directory/analytics": "workspace:*",
     "@directory/config": "workspace:*",
     "@directory/contracts": "workspace:*",
     "@directory/core": "workspace:*",
-    "@modelcontextprotocol/sdk": "^1.12.1",
+    "@modelcontextprotocol/sdk": "^1.26.0",
     "zod": "^3.24.1"
   },
   "devDependencies": {
     "tsx": "^4.19.2",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vitest": "^3.0.0"
   }
 }

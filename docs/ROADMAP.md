@@ -49,11 +49,11 @@ Prove the slice runs end-to-end against real infrastructure.
 **Note:** no connected MCP can set Vercel/host env secrets — `DATABASE_URL` + `ANTHROPIC_API_KEY` are set once by the founder in the host dashboard.
 
 ### M3 — Design-Partner Prototype / Private Beta — **T+28d · 2026-07-17** _(T-prototype)_
-- [ ] 1–3 design-partner schools onboarded with real graduates
-- [ ] Profile **claim + edit** flow for graduates
-- [ ] Stripe in **test mode** end-to-end (checkout → webhook → subscription state)
-- [ ] Insights dashboard reviewed by real users; LEARN verdict shown against real outcomes
-- [ ] Feedback loop: weekly insight-quality review against the eval harness
+- [ ] 1–3 design-partner schools onboarded with real graduates _(2026-06-21: onboarding **mechanism** built — in-product `/onboard` org creation + default subscription row. Remaining (human-gated): secure real partner schools + rosters; admin invite/CSV import still to build.)_
+- [ ] Profile **claim + edit** flow for graduates _(2026-06-21: **built** — self-serve `/claim/[token]` (issueClaimToken/claimProfile, single-use + 14d expiry), server-side validation, publish/unpublish, owner draft load. Remaining: admin "emit claim link" button + seeded login credentials to exercise end-to-end.)_
+- [ ] Stripe in **test mode** end-to-end (checkout → webhook → subscription state) _(2026-06-21: **code-complete** — webhook UPSERTs the subscription mirror + syncs period/seats; default sub row on org-create; `billingConfigured()` fails closed on placeholders. BLOCKED on host secrets: real `STRIPE_SECRET_KEY`/`PRICE_ID`/`WEBHOOK_SECRET` + one test checkout.)_
+- [ ] Insights dashboard reviewed by real users; LEARN verdict shown against real outcomes _(2026-06-21: eval-quality persisted (`eval_run`) + admin "Insight quality" panel added. Remaining (human-gated): real partner traffic over ≥2 windows + real-user review capture (`insight_review`).)_
+- [ ] Feedback loop: weekly insight-quality review against the eval harness _(2026-06-21: nightly persists `eval_run`; admin surfaces pass-rate + source. Remaining: scheduled weekly run + runbook, and a key-gated live-Claude eval.)_
 **Exit:** a paying-intent design partner uses the product weekly and the nightly loop demonstrably improves.
 
 ### M4 — Public Beta / GTM — **T+56d · 2026-08-14** _(T-GTM)_
@@ -89,4 +89,4 @@ There is **no autonomous cross-session scheduler** in this environment. Cadence 
 3. **This file** — the source of truth; update the checkboxes and dates as milestones move.
 4. **(Optional) ClickUp reminders** — to ping the founder at each T-date.
 
-_Last updated: 2026-06-19._
+_Last updated: 2026-06-21 — Universal API pass (PR #12): complete REST coverage of every feature (admin keys/webhooks/branding/reviews/metrics/leads/subscription + write/ingest), org-scoped API-key auth + scopes, outbound CRM webhooks, rate limiting + request logging, MCP tool expansion, new `@directory/cli`, Vitest suite (46), two adversarial security reviews. Remaining M3/M4 items are human-gated (real Stripe keys/partners, prod RLS role, Deployment-Protection toggle, custom domain)._

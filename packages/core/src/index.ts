@@ -8,9 +8,20 @@ export { searchDirectory } from "./search.ts";
 export {
   getSchoolBySlug,
   getProfileDetail,
+  getOwnProfileDetail,
+  getProfileForWrite,
   updateProfile,
   profileEmbeddingText,
+  listSchoolGraduates,
+  type SchoolGraduate,
 } from "./profiles.ts";
+export {
+  issueClaimToken,
+  claimProfile,
+  previewClaim,
+  ClaimError,
+  type ClaimablePreview,
+} from "./claim.ts";
 export {
   runInsightForProfile,
   runInsightForSchool,
@@ -23,3 +34,39 @@ export {
   graduateProfileForMember,
   type Membership,
 } from "./membership.ts";
+// Re-export the eval harness so the worker (which depends on @directory/core,
+// not @directory/ai directly) can persist nightly eval runs.
+export { runEvals, type EvalResult } from "@directory/ai";
+export { listRecentEvalRuns, type EvalRunRow } from "./eval-runs.ts";
+export { runNightly } from "./nightly.ts";
+export { sendEmail, sendClaimInvite, schoolNameForOrg } from "./email.ts";
+export {
+  getOrganizationBranding,
+  updateOrganizationBranding,
+  type OrgBranding,
+} from "./organizations.ts";
+export {
+  createApiKey,
+  verifyApiKey,
+  listApiKeys,
+  revokeApiKey,
+  type ScopedKey,
+  type ApiKeyRow,
+} from "./api-keys.ts";
+export {
+  emit,
+  signPayload,
+  verifySignature,
+  generateWebhookSecret,
+  sweepWebhookDeliveries,
+  listWebhookEndpoints,
+  createWebhookEndpoint,
+  setWebhookEndpointEnabled,
+  rotateWebhookSecret,
+  deleteWebhookEndpoint,
+  BlockedUrlError,
+  type WebhookEndpointRow,
+} from "./webhooks.ts";
+export { assertPublicHttpsUrl, isBlockedAddress } from "./net-guard.ts";
+export { createLead, listLeads, LeadError } from "./leads.ts";
+export { importRoster } from "./roster.ts";

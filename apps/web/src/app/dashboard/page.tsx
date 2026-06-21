@@ -10,6 +10,8 @@ import { getAuthContext } from "../../lib/auth-session.ts";
 export default async function DashboardPage() {
   const ctx = await getAuthContext();
   if (!ctx) redirect("/login");
+  // No school yet → first-run onboarding to create one.
+  if (!ctx.organizationId) redirect("/onboard");
   if (ctx.role === "owner" || ctx.role === "admin") redirect("/admin");
   redirect("/me");
 }

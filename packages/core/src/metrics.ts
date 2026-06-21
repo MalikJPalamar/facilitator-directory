@@ -42,14 +42,19 @@ function applyRow(metrics: Metrics, eventType: string, n: number): void {
 
 /** Per-graduate metric counts over [from, to). */
 export async function getProfileMetrics(
+  organizationId: string,
   profileId: string,
   from: Date,
   to: Date,
 ): Promise<Metrics> {
+  // Org-scoped: filter by organization_id AND profile_id so a profile id alone
+  // can never read another tenant's events (defense-in-depth for any future
+  // path that lets a caller supply a profileId).
   const rows = (await db.execute(sql`
     select event_type, count(*)::int as n
     from analytics_event
-    where profile_id = ${profileId}
+    where organization_id = ${organizationId}
+      and profile_id = ${profileId}
       and occurred_at >= ${from.toISOString()}
       and occurred_at < ${to.toISOString()}
     group by event_type

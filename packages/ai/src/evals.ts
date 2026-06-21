@@ -76,21 +76,68 @@ function scoreOne(rubric: Rubric, content: {
   return { passed: reasons.length === 0, reasons };
 }
 
-async function main() {
+export type EvalResult = {
+  passed: number;
+  total: number;
+  passRate: number;
+  source: "fallback" | "claude";
+  failures: Record<string, unknown>[];
+};
+
+/**
+ * Run the full rubric suite and return a structured result. Used both by the
+ * CLI (below) and by the nightly loop, which persists each run as an `eval_run`
+ * row so the admin dashboard can chart insight quality over time.
+ *
+ * `source` is "claude" only if EVERY fixture went through the real model path —
+ * a single fallback downgrades the run, so a green run on the deterministic
+ * fallback is never mistaken for a validated model path.
+ */
+export async function runEvals(): Promise<EvalResult> {
   let passed = 0;
+  let allClaude = true;
+  const failures: Record<string, unknown>[] = [];
+
   for (const rubric of FIXTURES) {
     const result = await generateInsight(rubric.subject);
+    if (result.usage.source !== "claude") allClaude = false;
     const score = scoreOne(rubric, result.content);
-    const tag = score.passed ? "PASS" : "FAIL";
-    console.log(
-      `[${tag}] ${rubric.name} (${result.usage.source})` +
-        (score.passed ? "" : ` — ${score.reasons.join(", ")}`),
-    );
-    if (score.passed) passed++;
+    if (score.passed) {
+      passed++;
+    } else {
+      failures.push({
+        name: rubric.name,
+        source: result.usage.source,
+        reasons: score.reasons,
+      });
+    }
   }
-  const rate = ((passed / FIXTURES.length) * 100).toFixed(0);
-  console.log(`\nEval pass rate: ${passed}/${FIXTURES.length} (${rate}%)`);
-  if (passed < FIXTURES.length) process.exitCode = 1;
+
+  const total = FIXTURES.length;
+  return {
+    passed,
+    total,
+    passRate: total === 0 ? 0 : passed / total,
+    source: allClaude ? "claude" : "fallback",
+    failures,
+  };
+}
+
+async function main() {
+  const { passed, total, passRate, failures } = await runEvals();
+  const failByName = new Map(failures.map((f) => [f.name as string, f]));
+  for (const rubric of FIXTURES) {
+    const fail = failByName.get(rubric.name);
+    const tag = fail ? "FAIL" : "PASS";
+    const src = fail ? (fail.source as string) : "ok";
+    console.log(
+      `[${tag}] ${rubric.name} (${src})` +
+        (fail ? ` — ${(fail.reasons as string[]).join(", ")}` : ""),
+    );
+  }
+  const rate = (passRate * 100).toFixed(0);
+  console.log(`\nEval pass rate: ${passed}/${total} (${rate}%)`);
+  if (passed < total) process.exitCode = 1;
 }
 
 // Run directly (tsx src/evals.ts), not when imported.

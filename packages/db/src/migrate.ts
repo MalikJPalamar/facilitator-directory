@@ -31,6 +31,13 @@ const ORG_SCOPED_TABLES = [
   "insight",
   "review_item",
   "ad_placement",
+  "lead",
+  "webhook_endpoint",
+  "webhook_delivery",
+  // NOTE: api_key + idempotency_key + rate_limit are intentionally NOT here.
+  // api_key is read by key hash before any tenant context exists; idempotency_key
+  // and rate_limit have no organization_id column (rate_limit's anon subject is
+  // an IP). All are scoped in application code instead.
 ];
 
 async function main() {

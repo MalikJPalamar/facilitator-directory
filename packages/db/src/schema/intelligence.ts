@@ -161,6 +161,27 @@ export const reviewItem = pgTable(
   (t) => [index("review_item_org_status_idx").on(t.organizationId, t.status)],
 );
 
+/**
+ * Insight-engine quality over time (M3 item 5). One row per eval-harness run
+ * (nightly + CI). Lets the admin dashboard show whether insight quality holds as
+ * the model/prompt evolves. `source` distinguishes the deterministic fallback
+ * from real Claude output so a green run on the fallback isn't mistaken for a
+ * validated model path.
+ */
+export const evalRun = pgTable(
+  "eval_run",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    runAt: timestamp("run_at").notNull().defaultNow(),
+    passed: integer("passed").notNull().default(0),
+    total: integer("total").notNull().default(0),
+    passRate: doublePrecision("pass_rate").notNull().default(0),
+    failures: jsonb("failures").$type<Record<string, unknown>[]>().default([]),
+    source: text("source").notNull().default("fallback"), // fallback | claude
+  },
+  (t) => [index("eval_run_run_at_idx").on(t.runAt)],
+);
+
 // ── Future-ready stubs (schema reserved; no compute/UI this session) ──
 
 export const incentiveScore = pgTable("incentive_score", {

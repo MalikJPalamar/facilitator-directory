@@ -9,6 +9,8 @@
   },
   "scripts": {
     "nightly": "tsx src/nightly.ts",
+    "journey": "tsx src/journey.ts",
+    "provision": "tsx src/provision-school.ts",
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",
     "lint": "echo 'no lint'",

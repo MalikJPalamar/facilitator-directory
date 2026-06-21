@@ -1,0 +1,41 @@
+{
+  "_comment": "Superadmin roster for `pnpm provision-school config/<school>.json --base-url=https://<domain>`. Copy this, fill real facilitators, keep it OUT of git if it holds PII. lat/lng optional (enables geo search); email is only used to address the claim link.",
+  "school": {
+    "slug": "aob",
+    "name": "Academy of Breath",
+    "themeColor": "#3B7A8C",
+    "heroCopy": "Find a certified Academy of Breath facilitator you can trust.",
+    "brandGuidelines": "Warm, grounded, trauma-informed. Avoid medical claims. Emphasise safety, consent, lived experience.",
+    "ownerEmail": "malik@builderbee.co"
+  },
+  "facilitators": [
+    {
+      "slug": "jane-doe",
+      "displayName": "Jane Doe",
+      "email": "jane@example.com",
+      "headline": "Conscious Connected Breathwork for anxiety & burnout",
+      "bio": "Gentle, trauma-informed 1:1 and group sessions.",
+      "modalities": ["Conscious Connected Breathing"],
+      "city": "London",
+      "country": "GB",
+      "lat": 51.5074,
+      "lng": -0.1278,
+      "online": true,
+      "program": "AoB Practitioner L2"
+    },
+    {
+      "slug": "john-smith",
+      "displayName": "John Smith",
+      "email": "john@example.com",
+      "headline": "Functional breathing for performance & sleep",
+      "bio": "Science-backed breathing coaching.",
+      "modalities": ["Functional Breathing"],
+      "city": "Berlin",
+      "country": "DE",
+      "lat": 52.52,
+      "lng": 13.405,
+      "online": false,
+      "program": "AoB Functional Coach"
+    }
+  ]
+}

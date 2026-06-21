@@ -9,3 +9,4 @@ export {
   type InsightSubject,
   type InsightResult,
 } from "./insights.ts";
+export { runEvals, type EvalResult } from "./evals.ts";

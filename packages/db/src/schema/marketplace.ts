@@ -42,6 +42,11 @@ export const graduateProfile = pgTable(
     // draft | published | hidden
     status: text("status").notNull().default("draft"),
     acceptingClients: boolean("accepting_clients").notNull().default(true),
+    // Self-serve claim: a single-use, expiring token lets a real graduate bind
+    // their account to this seeded/invited profile (repoints member_id on claim).
+    claimToken: text("claim_token").unique(),
+    claimTokenExpiresAt: timestamp("claim_token_expires_at"),
+    claimedAt: timestamp("claimed_at"),
     embedding: vector("embedding"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),

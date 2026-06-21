@@ -18,16 +18,20 @@
     "db:seed": "pnpm --filter @directory/db seed",
     "infra:up": "docker compose up -d",
     "infra:down": "docker compose down",
-    "intelligence:nightly": "pnpm --filter @directory/worker nightly"
+    "intelligence:nightly": "pnpm --filter @directory/worker nightly",
+    "journey": "pnpm --filter @directory/worker journey",
+    "provision-school": "pnpm --filter @directory/worker provision"
   },
   "devDependencies": {
     "turbo": "^2.3.3",
     "typescript": "^5.7.2",
-    "@types/node": "^22.10.2"
+    "@types/node": "^22.10.2",
+    "vitest": "^3.0.0"
   },
   "pnpm": {
     "overrides": {
       "@modelcontextprotocol/sdk": "1.29.0"
-    }
+    },
+    "onlyBuiltDependencies": ["esbuild"]
   }
 }

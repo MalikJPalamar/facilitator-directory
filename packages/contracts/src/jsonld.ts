@@ -56,6 +56,40 @@ export function wellKnownAffordance(baseUrl: string, mcpUrl: string) {
       "AI-native marketplace of certified practitioners. Agent-accessible.",
     openapi: `${baseUrl}/openapi.json`,
     mcp: { url: mcpUrl, transport: "streamable-http" },
-    capabilities: ["search_directory", "get_profile", "get_insights"],
+    // Read capabilities are public (no token). Write capabilities require an
+    // org-scoped Bearer API key with the matching scope.
+    capabilities: [
+      "search_directory",
+      "get_profile",
+      "get_school",
+      "create_lead",
+      "suggest_profile_edit",
+      "get_insights",
+      "import_roster",
+      "subscribe_webhooks",
+    ],
+    authentication: {
+      type: "bearer",
+      scheme: "Authorization: Bearer dk_live_…",
+      issued_at: `${baseUrl.replace(/\/api$/, "")}/admin/keys`,
+      scopes: [
+        "directory:read",
+        "insights:read",
+        "leads:write",
+        "profiles:write",
+        "roster:admin",
+      ],
+    },
+    webhooks: {
+      events: [
+        "profile.claimed",
+        "profile.published",
+        "profile.updated",
+        "contact.requested",
+        "lead.created",
+        "search.performed",
+      ],
+      signature_header: "directory-signature",
+    },
   };
 }
