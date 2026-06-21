@@ -1,11 +1,12 @@
 import { billingConfigured, getSubscription } from "@directory/billing";
-import { latestInsightDTO } from "@directory/core";
+import { latestInsightDTO, listSchoolGraduates } from "@directory/core";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { getAuthContext } from "../../lib/auth-session.ts";
 import { InsightPanel } from "../insight-panel.tsx";
 import { LogoutButton } from "../logout-button.tsx";
-import { openPortal, startCheckout } from "./actions.ts";
+import { emitClaimLink, openPortal, startCheckout } from "./actions.ts";
 import { EvalQualityPanel } from "./eval-quality-panel.tsx";
 
 /**
@@ -16,19 +17,34 @@ import { EvalQualityPanel } from "./eval-quality-panel.tsx";
 export default async function AdminPage({
   searchParams,
 }: {
-  searchParams: Promise<{ checkout?: string }>;
+  searchParams: Promise<{
+    checkout?: string;
+    claim?: string;
+    token?: string;
+    claim_error?: string;
+  }>;
 }) {
   const ctx = await getAuthContext();
   if (!ctx) redirect("/login");
   if (ctx.role !== "owner" && ctx.role !== "admin") redirect("/me");
   if (!ctx.organizationId) redirect("/me");
 
-  const [insight, sub] = await Promise.all([
+  const [insight, sub, graduates] = await Promise.all([
     latestInsightDTO(ctx.organizationId, "school", null),
     getSubscription(ctx.organizationId),
+    listSchoolGraduates(ctx.organizationId),
   ]);
-  const checkout = (await searchParams).checkout;
+  const params = await searchParams;
+  const { checkout, token } = params;
+  const claimError = params.claim_error;
   const active = sub?.status === "active" || sub?.status === "trialing";
+
+  // Same origin derivation as actions.ts so the emitted /claim/<token> link is
+  // absolute and copyable (works behind the proxy's x-forwarded-* headers).
+  const h = await headers();
+  const origin = `${h.get("x-forwarded-proto") ?? "https"}://${
+    h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000"
+  }`;
 
   return (
     <div className="page">
@@ -85,6 +101,71 @@ export default async function AdminPage({
         </div>
 
         <EvalQualityPanel />
+
+        <section className="panel">
+          <h2 style={{ fontSize: "var(--fs-h3)", marginTop: 0 }}>
+            Graduates &amp; claim links
+          </h2>
+
+          {token && (
+            <div className="panel panel--accent" style={{ marginBottom: "var(--space-4)" }}>
+              <p style={{ margin: "0 0 var(--space-2)" }}>
+                <strong>Claim link ready.</strong> Send this to the graduate —
+                single-use, expires in 14 days.
+              </p>
+              <code
+                style={{
+                  display: "block",
+                  wordBreak: "break-all",
+                  fontSize: "var(--fs-sm)",
+                }}
+              >
+                {origin}/claim/{token}
+              </code>
+            </div>
+          )}
+
+          {claimError && (
+            <p className="muted" style={{ marginTop: 0 }}>
+              That profile is already claimed.
+            </p>
+          )}
+
+          {graduates.length === 0 ? (
+            <p className="muted" style={{ margin: 0 }}>
+              No graduate profiles yet.
+            </p>
+          ) : (
+            <ul className="stack" style={{ listStyle: "none", margin: 0, padding: 0 }}>
+              {graduates.map((g) => (
+                <li
+                  key={g.id}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: "var(--space-3)",
+                  }}
+                >
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: "var(--space-3)" }}>
+                    {g.displayName}
+                    <span className={`badge ${g.claimed ? "badge-verified" : "badge-online"}`}>
+                      {g.claimed ? "claimed" : "unclaimed"}
+                    </span>
+                  </span>
+                  {!g.claimed && (
+                    <form action={emitClaimLink}>
+                      <input type="hidden" name="profileId" value={g.id} />
+                      <button type="submit" className="btn btn-outline">
+                        Emit claim link
+                      </button>
+                    </form>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
       </div>
     </div>
   );

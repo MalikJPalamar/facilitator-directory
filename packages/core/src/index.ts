@@ -11,6 +11,8 @@ export {
   getOwnProfileDetail,
   updateProfile,
   profileEmbeddingText,
+  listSchoolGraduates,
+  type SchoolGraduate,
 } from "./profiles.ts";
 export {
   issueClaimToken,

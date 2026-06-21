@@ -27,7 +27,12 @@ export default function LoginPage() {
       setError(res.error.message ?? "Something went wrong");
       return;
     }
-    router.push("/dashboard");
+    // Honour ?next= (claim links send signed-out users here first), but only a
+    // same-origin relative path — never an absolute/protocol-relative redirect.
+    const next = new URLSearchParams(window.location.search).get("next");
+    const dest =
+      next && next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
+    router.push(dest);
     router.refresh();
   }
 

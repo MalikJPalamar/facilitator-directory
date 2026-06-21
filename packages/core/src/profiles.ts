@@ -5,7 +5,7 @@ import {
   type ProfileStatus,
   type SchoolPublic,
 } from "@directory/contracts";
-import { and, db, eq, sql, tables } from "@directory/db";
+import { and, asc, db, eq, sql, tables } from "@directory/db";
 
 export async function getSchoolBySlug(
   slug: string,
@@ -149,6 +149,45 @@ export function profileEmbeddingText(parts: {
     parts.bio ?? "",
     (parts.modalities ?? []).join(" "),
   ].join(" \n ");
+}
+
+/** One graduate row for the school admin's claim-link table. */
+export type SchoolGraduate = {
+  id: string;
+  slug: string;
+  displayName: string;
+  status: string;
+  claimed: boolean;
+};
+
+/**
+ * List every graduate profile in a school for the admin claim-link UI, ordered
+ * by display name. `claimed` is true once a real graduate has bound their
+ * account (`claimed_at` set) — the UI only offers an emit-link button for the
+ * still-unclaimed rows. Tenant-scoped to `organizationId`.
+ */
+export async function listSchoolGraduates(
+  organizationId: string,
+): Promise<SchoolGraduate[]> {
+  const rows = await db
+    .select({
+      id: tables.graduateProfile.id,
+      slug: tables.graduateProfile.slug,
+      displayName: tables.graduateProfile.displayName,
+      status: tables.graduateProfile.status,
+      claimedAt: tables.graduateProfile.claimedAt,
+    })
+    .from(tables.graduateProfile)
+    .where(eq(tables.graduateProfile.organizationId, organizationId))
+    .orderBy(asc(tables.graduateProfile.displayName));
+
+  return rows.map((r) => ({
+    id: r.id,
+    slug: r.slug,
+    displayName: r.displayName,
+    status: r.status,
+    claimed: r.claimedAt != null,
+  }));
 }
 
 export async function updateProfile(
