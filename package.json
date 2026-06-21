@@ -18,7 +18,8 @@
     "db:seed": "pnpm --filter @directory/db seed",
     "infra:up": "docker compose up -d",
     "infra:down": "docker compose down",
-    "intelligence:nightly": "pnpm --filter @directory/worker nightly"
+    "intelligence:nightly": "pnpm --filter @directory/worker nightly",
+    "journey": "pnpm --filter @directory/worker journey"
   },
   "devDependencies": {
     "turbo": "^2.3.3",
