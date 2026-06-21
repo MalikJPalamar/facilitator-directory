@@ -8,6 +8,10 @@ import {
 import type { WebhookEvent } from "@directory/contracts";
 import { and, db, eq, inArray, sql, tables } from "@directory/db";
 
+import { assertPublicHttpsUrl } from "./net-guard.ts";
+
+export { BlockedUrlError } from "./net-guard.ts";
+
 /**
  * Outbound webhooks — push directory events to a school's CRM. Each event is
  * fanned out to every enabled endpoint whose filter matches; one durable
@@ -128,11 +132,26 @@ async function deliverOne(deliveryId: string): Promise<void> {
     .limit(1);
   if (!ep || !ep.enabled) return;
 
+  const attempt = d.attempts + 1;
+  // Re-check the target at delivery time so a DNS-rebind (public at register,
+  // private now) cannot turn a stored endpoint into an SSRF on retry.
+  try {
+    await assertPublicHttpsUrl(ep.url);
+  } catch (err) {
+    await scheduleRetry(
+      d.id,
+      attempt,
+      d.maxAttempts,
+      null,
+      err instanceof Error ? err.message : "blocked target",
+    );
+    return;
+  }
+
   const body = JSON.stringify(d.payload);
   const ts = Math.floor(Date.now() / 1000);
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
-  const attempt = d.attempts + 1;
   try {
     const res = await fetch(ep.url, {
       method: "POST",
@@ -246,6 +265,8 @@ export async function createWebhookEndpoint(input: {
   events: string[];
   description?: string;
 }): Promise<{ id: string; secret: string }> {
+  // SSRF guard: reject endpoints that resolve to private/metadata addresses.
+  await assertPublicHttpsUrl(input.url);
   const secret = generateWebhookSecret();
   const [row] = await db
     .insert(tables.webhookEndpoint)

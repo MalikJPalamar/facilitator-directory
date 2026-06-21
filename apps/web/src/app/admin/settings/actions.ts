@@ -2,6 +2,7 @@
 
 import { WEBHOOK_EVENTS, WebhookEndpointInput } from "@directory/contracts";
 import {
+  BlockedUrlError,
   createWebhookEndpoint,
   deleteWebhookEndpoint,
   rotateWebhookSecret,
@@ -55,15 +56,22 @@ export async function createWebhook(formData: FormData): Promise<void> {
   });
   if (!parsed.success) {
     redirect("/admin/settings?webhook_error=1");
-  } else {
-    const { secret } = await createWebhookEndpoint({
+  }
+
+  let secret: string;
+  try {
+    ({ secret } = await createWebhookEndpoint({
       organizationId,
       url: parsed.data.url,
       events: parsed.data.events,
       description: parsed.data.description,
-    });
-    redirect(`/admin/settings?webhook_secret=${encodeURIComponent(secret)}`);
+    }));
+  } catch (err) {
+    // A private/loopback/metadata target (SSRF guard) is a soft error.
+    if (err instanceof BlockedUrlError) redirect("/admin/settings?webhook_error=1");
+    throw err;
   }
+  redirect(`/admin/settings?webhook_secret=${encodeURIComponent(secret)}`);
 }
 
 export async function toggleWebhook(formData: FormData): Promise<void> {

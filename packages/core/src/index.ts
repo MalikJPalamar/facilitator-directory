@@ -64,7 +64,9 @@ export {
   setWebhookEndpointEnabled,
   rotateWebhookSecret,
   deleteWebhookEndpoint,
+  BlockedUrlError,
   type WebhookEndpointRow,
 } from "./webhooks.ts";
+export { assertPublicHttpsUrl, isBlockedAddress } from "./net-guard.ts";
 export { createLead, listLeads, LeadError } from "./leads.ts";
 export { importRoster } from "./roster.ts";
