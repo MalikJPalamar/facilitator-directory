@@ -1,6 +1,6 @@
 import { randomBytes, randomUUID } from "node:crypto";
 
-import { and, db, eq, tables } from "@directory/db";
+import { and, db, eq, isNull, tables } from "@directory/db";
 
 /**
  * Self-serve profile claim. A school seeds/invites a `graduate_profile` and
@@ -23,11 +23,24 @@ export async function issueClaimToken(profileId: string): Promise<string> {
   const token = `${randomUUID()}${randomBytes(16).toString("hex")}`;
   const expiresAt = new Date(Date.now() + CLAIM_TTL_MS);
 
-  await db
+  // Only arm a token on an UNCLAIMED profile — never re-issue a link for a
+  // profile a real graduate already owns (re-arming would enable takeover).
+  const armed = await db
     .update(tables.graduateProfile)
     .set({ claimToken: token, claimTokenExpiresAt: expiresAt })
-    .where(eq(tables.graduateProfile.id, profileId));
+    .where(
+      and(
+        eq(tables.graduateProfile.id, profileId),
+        isNull(tables.graduateProfile.claimedAt),
+      ),
+    )
+    .returning({ id: tables.graduateProfile.id });
 
+  if (armed.length === 0) {
+    throw new ClaimError(
+      "This profile cannot be claimed (already claimed or not found).",
+    );
+  }
   return token;
 }
 
@@ -86,45 +99,59 @@ export async function claimProfile(opts: {
   const preview = await previewClaim(token);
   if (!preview) throw new ClaimError("This claim link is invalid or has expired.");
 
-  // Reuse an existing (userId, orgId) membership, else create one.
-  const [existingMember] = await db
-    .select({ id: tables.member.id })
-    .from(tables.member)
-    .where(
-      and(
-        eq(tables.member.userId, userId),
-        eq(tables.member.organizationId, preview.organizationId),
-      ),
-    )
-    .limit(1);
+  // One transaction so a race-loser (or a re-claim attempt) leaves no orphan
+  // member: if the compare-and-set burn matches zero rows we throw, which rolls
+  // back any membership inserted above.
+  return db.transaction(async (tx) => {
+    // Reuse an existing (userId, orgId) membership, else create one.
+    const [existingMember] = await tx
+      .select({ id: tables.member.id })
+      .from(tables.member)
+      .where(
+        and(
+          eq(tables.member.userId, userId),
+          eq(tables.member.organizationId, preview.organizationId),
+        ),
+      )
+      .limit(1);
 
-  let memberId = existingMember?.id;
-  if (!memberId) {
-    memberId = randomUUID();
-    await db.insert(tables.member).values({
-      id: memberId,
-      organizationId: preview.organizationId,
-      userId,
-      role: "graduate",
-    });
-  }
+    let memberId = existingMember?.id;
+    if (!memberId) {
+      memberId = randomUUID();
+      await tx.insert(tables.member).values({
+        id: memberId,
+        organizationId: preview.organizationId,
+        userId,
+        role: "graduate",
+      });
+    }
 
-  // Repoint the profile to the claiming member and burn the token. Re-scope to
-  // the org so a token can never reach across tenants.
-  await db
-    .update(tables.graduateProfile)
-    .set({
-      memberId,
-      claimToken: null,
-      claimTokenExpiresAt: null,
-      claimedAt: new Date(),
-    })
-    .where(
-      and(
-        eq(tables.graduateProfile.id, preview.profileId),
-        eq(tables.graduateProfile.organizationId, preview.organizationId),
-      ),
-    );
+    // Compare-and-set: repoint + burn the token ONLY while it is still the live
+    // token AND the profile is still unclaimed (claimed_at IS NULL), re-scoped to
+    // the profile's org. A second concurrent claim, a re-used token, or a
+    // re-claim of an already-owned profile all match zero rows -> ClaimError.
+    const claimed = await tx
+      .update(tables.graduateProfile)
+      .set({
+        memberId,
+        claimToken: null,
+        claimTokenExpiresAt: null,
+        claimedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(tables.graduateProfile.id, preview.profileId),
+          eq(tables.graduateProfile.organizationId, preview.organizationId),
+          eq(tables.graduateProfile.claimToken, token),
+          isNull(tables.graduateProfile.claimedAt),
+        ),
+      )
+      .returning({ id: tables.graduateProfile.id });
 
-  return preview.slug;
+    if (claimed.length === 0) {
+      throw new ClaimError("This claim link is invalid or has expired.");
+    }
+
+    return preview.slug;
+  });
 }
