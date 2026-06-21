@@ -38,3 +38,9 @@ export {
 export { runEvals, type EvalResult } from "@directory/ai";
 export { listRecentEvalRuns, type EvalRunRow } from "./eval-runs.ts";
 export { runNightly } from "./nightly.ts";
+export { sendEmail, sendClaimInvite, schoolNameForOrg } from "./email.ts";
+export {
+  getOrganizationBranding,
+  updateOrganizationBranding,
+  type OrgBranding,
+} from "./organizations.ts";

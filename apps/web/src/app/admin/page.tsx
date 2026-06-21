@@ -22,6 +22,8 @@ export default async function AdminPage({
     claim?: string;
     token?: string;
     claim_error?: string;
+    emailed?: string;
+    email_error?: string;
   }>;
 }) {
   const ctx = await getAuthContext();
@@ -37,6 +39,8 @@ export default async function AdminPage({
   const params = await searchParams;
   const { checkout, token } = params;
   const claimError = params.claim_error;
+  const emailed = params.emailed;
+  const emailError = params.email_error;
   const active = sub?.status === "active" || sub?.status === "trialing";
 
   // Same origin derivation as actions.ts so the emitted /claim/<token> link is
@@ -55,6 +59,9 @@ export default async function AdminPage({
         </span>
       </div>
       <h1>School admin</h1>
+      <p style={{ marginTop: 0 }}>
+        <a className="btn btn-outline" href="/admin/settings">School settings</a>
+      </p>
 
       {checkout === "success" && (
         <div className="panel panel--accent" style={{ marginBottom: "var(--space-4)" }}>
@@ -122,6 +129,18 @@ export default async function AdminPage({
               >
                 {origin}/claim/{token}
               </code>
+              {emailed && (
+                <p className="muted" style={{ fontSize: "var(--fs-sm)", margin: "var(--space-2) 0 0" }}>
+                  Invite emailed.
+                </p>
+              )}
+              {emailError && (
+                <p className="muted" style={{ fontSize: "var(--fs-sm)", margin: "var(--space-2) 0 0" }}>
+                  {emailError === "email not configured (set RESEND_API_KEY + EMAIL_FROM)"
+                    ? "Email not configured — copy the link above instead."
+                    : `Email not sent: ${emailError}`}
+                </p>
+              )}
             </div>
           )}
 
@@ -154,8 +173,17 @@ export default async function AdminPage({
                     </span>
                   </span>
                   {!g.claimed && (
-                    <form action={emitClaimLink}>
+                    <form
+                      action={emitClaimLink}
+                      style={{ display: "inline-flex", gap: "var(--space-2)", alignItems: "center" }}
+                    >
                       <input type="hidden" name="profileId" value={g.id} />
+                      <input
+                        className="input"
+                        name="email"
+                        type="email"
+                        placeholder="facilitator email (optional)"
+                      />
                       <button type="submit" className="btn btn-outline">
                         Emit claim link
                       </button>

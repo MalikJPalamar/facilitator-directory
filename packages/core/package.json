@@ -8,6 +8,7 @@
   "dependencies": {
     "@directory/ai": "workspace:*",
     "@directory/analytics": "workspace:*",
+    "@directory/config": "workspace:*",
     "@directory/contracts": "workspace:*",
     "@directory/db": "workspace:*",
     "drizzle-orm": "^0.38.3"

@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { issueClaimToken } from "@directory/core";
+import { issueClaimToken, sendClaimInvite } from "@directory/core";
 import { and, db, eq, queryClient, sql, tables } from "@directory/db";
 
 /**
@@ -271,10 +271,21 @@ async function main() {
       const token = await issueClaimToken(profileId);
       link = `${baseUrl}/claim/${token}`;
     }
+
+    let status = existing ? "re-issued link" : "created";
+    if (!dryRun && f.email && link) {
+      const r = await sendClaimInvite({
+        to: f.email,
+        schoolName: cfg.school.name,
+        claimUrl: link,
+      });
+      status += r.sent ? " [emailed]" : ` [email: ${r.reason ?? "failed"}]`;
+    }
+
     out.push({
       name: f.displayName,
       email: f.email ?? "",
-      status: existing ? "re-issued link" : "created",
+      status,
       link,
     });
   }
