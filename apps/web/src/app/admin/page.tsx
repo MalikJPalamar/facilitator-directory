@@ -6,6 +6,7 @@ import { getAuthContext } from "../../lib/auth-session.ts";
 import { InsightPanel } from "../insight-panel.tsx";
 import { LogoutButton } from "../logout-button.tsx";
 import { openPortal, startCheckout } from "./actions.ts";
+import { EvalQualityPanel } from "./eval-quality-panel.tsx";
 
 /**
  * School admin dashboard — school-level AI insights + billing. Gated to
@@ -82,6 +83,8 @@ export default async function AdminPage({
             </form>
           )}
         </div>
+
+        <EvalQualityPanel />
       </div>
     </div>
   );

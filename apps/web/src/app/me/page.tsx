@@ -34,9 +34,14 @@ export default async function MePage() {
       </div>
       {!profileId ? (
         <div className="panel">
-          <p style={{ margin: 0 }}>
-            This account isn&apos;t linked to a practitioner profile yet. Ask your
-            school to connect your profile, then your AI insights appear here.
+          <p style={{ marginTop: 0 }}>
+            This account isn&apos;t linked to a practitioner profile yet.
+          </p>
+          <p className="muted" style={{ marginBottom: 0 }}>
+            Your school creates your profile and sends you a one-time claim link
+            (it looks like <code>/claim/…</code>). Open that link while signed in
+            to claim your profile — then you can edit it and your AI insights
+            appear here.
           </p>
         </div>
       ) : insight ? (

@@ -1,8 +1,9 @@
 import { embed } from "@directory/ai";
-import type {
-  ProfileDetail,
+import {
   ProfileUpdate,
-  SchoolPublic,
+  type ProfileDetail,
+  type ProfileStatus,
+  type SchoolPublic,
 } from "@directory/contracts";
 import { and, db, eq, sql, tables } from "@directory/db";
 
@@ -26,24 +27,14 @@ export async function getSchoolBySlug(
   };
 }
 
-export async function getProfileDetail(
-  organizationId: string,
-  slug: string,
-): Promise<ProfileDetail | null> {
-  const [p] = await db
-    .select()
-    .from(tables.graduateProfile)
-    .where(
-      and(
-        eq(tables.graduateProfile.organizationId, organizationId),
-        eq(tables.graduateProfile.slug, slug),
-        // Public path: never expose draft/hidden profiles by guessable slug.
-        eq(tables.graduateProfile.status, "published"),
-      ),
-    )
-    .limit(1);
-  if (!p) return null;
-
+/**
+ * Hydrate a loaded `graduate_profile` row into the public `ProfileDetail` shape
+ * (modalities, certifications, primary location). Shared by the public and the
+ * owner-facing loaders so they can't drift.
+ */
+async function hydrateProfileDetail(
+  p: typeof tables.graduateProfile.$inferSelect,
+): Promise<ProfileDetail> {
   const modRows = (await db.execute(sql`
     select m.name from profile_modality pm
     join modality m on m.id = pm.modality_id
@@ -93,6 +84,58 @@ export async function getProfileDetail(
   };
 }
 
+export async function getProfileDetail(
+  organizationId: string,
+  slug: string,
+): Promise<ProfileDetail | null> {
+  const [p] = await db
+    .select()
+    .from(tables.graduateProfile)
+    .where(
+      and(
+        eq(tables.graduateProfile.organizationId, organizationId),
+        eq(tables.graduateProfile.slug, slug),
+        // Public path: never expose draft/hidden profiles by guessable slug.
+        eq(tables.graduateProfile.status, "published"),
+      ),
+    )
+    .limit(1);
+  if (!p) return null;
+  return hydrateProfileDetail(p);
+}
+
+/**
+ * Load the OWNER's view of their profile — no published-only filter, so drafts
+ * and hidden profiles stay editable. Tenant-scoped to `organizationId`; resolve
+ * the profile either by its id or by the member who owns it. Carries `status`
+ * so the editor can render the publish/unpublish control.
+ */
+export async function getOwnProfileDetail(opts: {
+  organizationId: string;
+  memberId?: string;
+  profileId?: string;
+}): Promise<(ProfileDetail & { status: ProfileStatus }) | null> {
+  const { organizationId, memberId, profileId } = opts;
+  if (!memberId && !profileId) return null;
+
+  const [p] = await db
+    .select()
+    .from(tables.graduateProfile)
+    .where(
+      and(
+        eq(tables.graduateProfile.organizationId, organizationId),
+        profileId
+          ? eq(tables.graduateProfile.id, profileId)
+          : eq(tables.graduateProfile.memberId, memberId as string),
+      ),
+    )
+    .limit(1);
+  if (!p) return null;
+
+  const detail = await hydrateProfileDetail(p);
+  return { ...detail, status: p.status as ProfileStatus };
+}
+
 /** Text used to compute a profile's semantic embedding. */
 export function profileEmbeddingText(parts: {
   displayName: string;
@@ -111,8 +154,12 @@ export function profileEmbeddingText(parts: {
 export async function updateProfile(
   organizationId: string,
   profileId: string,
-  patch: ProfileUpdate,
+  patchInput: ProfileUpdate,
 ): Promise<void> {
+  // Defense in depth: re-validate the patch at the trust boundary even if the
+  // caller already validated. Throws on bad shape (e.g. a non-URL website).
+  const patch = ProfileUpdate.parse(patchInput);
+
   // Recompute the embedding when text fields change so semantic search stays fresh.
   const [existing] = await db
     .select()
@@ -150,6 +197,7 @@ export async function updateProfile(
       links: patch.links ?? existing.links,
       acceptingClients: patch.acceptingClients ?? existing.acceptingClients,
       theme: patch.theme ?? existing.theme,
+      status: patch.status ?? existing.status,
       embedding,
       updatedAt: new Date(),
     })

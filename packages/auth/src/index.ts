@@ -1,5 +1,5 @@
 import { env } from "@directory/config";
-import { db } from "@directory/db";
+import { db, tables } from "@directory/db";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { organization } from "better-auth/plugins";
@@ -36,6 +36,23 @@ export const auth = betterAuth({
     organization({
       // Roles within a school.
       roles: ["owner", "admin", "graduate"] as unknown as never,
+      organizationHooks: {
+        /**
+         * Mirror a default subscription row the moment a school is created, so
+         * every org has a queryable billing state ("none" until checkout) and
+         * the admin/billing UI never has to special-case a missing row. The
+         * subscription's organization_id is unique, so guard against a
+         * duplicate insert (idempotent on retries).
+         */
+        afterCreateOrganization: async ({ organization: org }) => {
+          await db
+            .insert(tables.subscription)
+            .values({ organizationId: org.id, status: "none", seats: 1 })
+            .onConflictDoNothing({
+              target: tables.subscription.organizationId,
+            });
+        },
+      },
     }),
   ],
 });

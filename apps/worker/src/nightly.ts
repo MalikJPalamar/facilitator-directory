@@ -1,5 +1,9 @@
 import { and, db, eq, queryClient, tables } from "@directory/db";
-import { runInsightForProfile, runInsightForSchool } from "@directory/core";
+import {
+  runEvals,
+  runInsightForProfile,
+  runInsightForSchool,
+} from "@directory/core";
 
 /**
  * The nightly iterative loop (the LEARN cycle).
@@ -63,6 +67,26 @@ export async function runNightly(now = new Date()): Promise<void> {
     `✓ nightly loop complete in ${secs}s — ${profileRuns} graduate insights, ` +
       `${schoolRuns} school insights (${claudeRuns} via Claude, rest via offline fallback).`,
   );
+
+  // GOVERN/ASSURE: sample the trusted-eval harness and persist one eval_run row
+  // so the admin dashboard can chart insight quality over time. Never let an
+  // eval failure abort the nightly insights — log and move on.
+  try {
+    const evals = await runEvals();
+    await db.insert(tables.evalRun).values({
+      passed: evals.passed,
+      total: evals.total,
+      passRate: evals.passRate,
+      source: evals.source,
+      failures: evals.failures,
+    });
+    const ratePct = (evals.passRate * 100).toFixed(0);
+    console.log(
+      `✓ eval run logged — ${evals.passed}/${evals.total} (${ratePct}%) via ${evals.source}.`,
+    );
+  } catch (err) {
+    console.error("⚠ eval run skipped (nightly insights unaffected):", err);
+  }
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

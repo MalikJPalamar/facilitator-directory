@@ -86,13 +86,18 @@ export type SchoolPublic = z.infer<typeof SchoolPublic>;
 
 // ── Profile editing (graduate) ────────────────────────────────────────────────
 
+export const ProfileStatus = z.enum(["draft", "published", "hidden"]);
+export type ProfileStatus = z.infer<typeof ProfileStatus>;
+
 export const ProfileUpdate = z.object({
   headline: z.string().max(160).optional(),
   bio: z.string().max(4000).optional(),
   pricing: z.record(z.unknown()).optional(),
-  links: z.record(z.string()).optional(),
+  // Public links: a website, when present, must be a valid URL.
+  links: z.object({ website: z.string().url() }).partial().catchall(z.string()).optional(),
   acceptingClients: z.boolean().optional(),
   theme: z.record(z.unknown()).optional(),
+  status: ProfileStatus.optional(),
 });
 export type ProfileUpdate = z.infer<typeof ProfileUpdate>;
 

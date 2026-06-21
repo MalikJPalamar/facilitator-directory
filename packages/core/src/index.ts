@@ -8,9 +8,17 @@ export { searchDirectory } from "./search.ts";
 export {
   getSchoolBySlug,
   getProfileDetail,
+  getOwnProfileDetail,
   updateProfile,
   profileEmbeddingText,
 } from "./profiles.ts";
+export {
+  issueClaimToken,
+  claimProfile,
+  previewClaim,
+  ClaimError,
+  type ClaimablePreview,
+} from "./claim.ts";
 export {
   runInsightForProfile,
   runInsightForSchool,
@@ -23,3 +31,7 @@ export {
   graduateProfileForMember,
   type Membership,
 } from "./membership.ts";
+// Re-export the eval harness so the worker (which depends on @directory/core,
+// not @directory/ai directly) can persist nightly eval runs.
+export { runEvals, type EvalResult } from "@directory/ai";
+export { listRecentEvalRuns, type EvalRunRow } from "./eval-runs.ts";
