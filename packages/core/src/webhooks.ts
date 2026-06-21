@@ -203,7 +203,8 @@ export async function sweepWebhookDeliveries(now = new Date()): Promise<number> 
       and(
         inArray(tables.webhookDelivery.status, ["pending", "failed"]),
         sql`${tables.webhookDelivery.attempts} < ${tables.webhookDelivery.maxAttempts}`,
-        sql`${tables.webhookDelivery.nextAttemptAt} <= ${now}`,
+        // postgres.js can't bind a JS Date as a query param here — pass ISO text.
+        sql`${tables.webhookDelivery.nextAttemptAt} <= ${now.toISOString()}`,
       ),
     )
     .limit(SWEEP_LIMIT);
