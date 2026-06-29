@@ -37,18 +37,23 @@ export function Stat({
 /**
  * A compact mini-stat used in the per-school drill-down's "recent activity"
  * strip — smaller than {@link Stat}, with the icon inline with the label.
+ * `lead` lifts the card with the same accent treatment {@link Stat} uses, so
+ * the agents-as-customers metric (agent queries) reads as the headline signal
+ * on the drill-down too — narrative consistency with the index.
  */
 export function MiniStat({
   icon: Icon,
   label,
   value,
+  lead = false,
 }: {
   icon: LucideIcon;
   label: string;
   value: number;
+  lead?: boolean;
 }) {
   return (
-    <div className={styles.mini}>
+    <div className={lead ? `${styles.mini} ${styles["mini--lead"]}` : styles.mini}>
       <span className={styles.miniValue}>{value.toLocaleString()}</span>
       <span className={styles.miniLabel}>
         <Icon aria-hidden /> {label}

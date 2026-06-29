@@ -224,38 +224,8 @@
   text-align: right;
 }
 
-/* Members table. */
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: var(--fs-sm);
-}
-.table th {
-  text-align: left;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  font-size: var(--fs-xs);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  padding: 0 var(--space-3) var(--space-2);
-  border-bottom: 1px solid var(--color-border-strong);
-}
-.table td {
-  padding: var(--space-3);
-  border-bottom: 1px solid var(--color-border);
-  color: var(--color-text);
-  vertical-align: middle;
-}
-.table tr:last-child td {
-  border-bottom: none;
-}
-.table td.email {
-  color: var(--color-text-muted);
-  font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  font-size: var(--fs-xs);
-}
-
-/* Small role tag inside the members table. */
+/* Small role tag inside the members table (table chrome now uses the shared
+ * global .data-table / .table-card / .mono primitives). */
 .roleTag {
   display: inline-flex;
   align-items: center;
@@ -280,11 +250,24 @@
 }
 .mini {
   background: var(--color-surface);
+  border: 1px solid transparent;
   border-radius: var(--radius-sm);
   padding: var(--space-4);
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+/* Lifts the agents-as-customers mini-stat — mirrors .stat--lead on the index. */
+.mini--lead {
+  border-color: var(--color-accent-ring);
+  background: linear-gradient(180deg, var(--color-accent-soft), var(--color-surface) 64%);
+}
+.mini--lead .miniValue {
+  color: var(--color-accent-hover);
+}
+.mini--lead .miniLabel,
+.mini--lead .miniLabel svg {
+  color: var(--color-accent-hover);
 }
 .miniValue {
   font-size: 1.5rem;

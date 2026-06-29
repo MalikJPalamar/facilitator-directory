@@ -10,48 +10,21 @@
   gap: var(--space-7);
 }
 
-/* ---- Hero ---- */
-.hero {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-.heroIcon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 46px;
-  height: 46px;
-  border-radius: var(--radius);
-  background: var(--color-accent-soft);
-  color: var(--color-accent-hover);
-  margin-bottom: var(--space-2);
-}
-.heroTitle {
-  margin: 0;
-  font-size: var(--fs-h2);
-}
-.heroLead {
-  margin: 0;
-  color: var(--color-text-muted);
-  font-size: clamp(1rem, 1.4vw, 1.15rem);
-  max-width: 60ch;
-}
+/* The page header is the shared <PageHeader/> primitive (.page-header in
+   globals.css); no bespoke hero lives here anymore. */
 
-/* ---- Sticky in-page nav ---- */
+/* ---- In-page section nav ----
+   Deliberately NOT sticky: the admin shell already pins its own sub-nav bar at
+   top:0, and a second sticky bar here would stack/collide with it. This stays a
+   static jump bar; section scroll-margin (below) clears the shell bar on jump. */
 .nav {
-  position: sticky;
-  top: var(--space-3);
-  z-index: 5;
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
   padding: var(--space-2);
   border-radius: var(--radius-pill);
   border: 1px solid var(--color-border);
-  background: rgba(251, 251, 253, 0.82);
-  backdrop-filter: saturate(180%) blur(12px);
-  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  background: var(--color-card);
   box-shadow: var(--shadow-sm);
 }
 .navLink {
@@ -72,7 +45,9 @@
 
 /* ---- Section heading ---- */
 .section {
-  scroll-margin-top: 84px;
+  /* Clear the admin shell's sticky sub-nav bar (the only sticky chrome now) so
+     an in-page jump doesn't tuck the heading underneath it. */
+  scroll-margin-top: 100px;
 }
 .sectionHead {
   display: flex;
@@ -232,6 +207,15 @@
   color: var(--color-text-muted);
   line-height: 1.4;
 }
+.scopeNote {
+  margin: var(--space-3) 0 0;
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+.scopeNote code {
+  font-size: var(--fs-xs);
+}
 
 /* ---- Keys table ---- */
 .tableWrap {
@@ -314,6 +298,17 @@
 }
 .toolAuth {
   margin-top: 2px;
+}
+/* Scope badge on a write tool: neutral chip + lock + the scope, monospaced so
+   it reads as "requires <scope>" rather than a verified/online status. */
+.scopeBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+.scopeBadge svg {
+  flex: 0 0 auto;
 }
 
 /* ---- Steps (CLI) ---- */

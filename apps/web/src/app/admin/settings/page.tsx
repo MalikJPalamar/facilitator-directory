@@ -1,6 +1,7 @@
 import { getOrganizationBranding } from "@directory/core";
 import { redirect } from "next/navigation";
 
+import { PageHeader } from "../_components/PageHeader.tsx";
 import { getAuthContext } from "../../../lib/auth-session.ts";
 import { updateBranding } from "./actions.ts";
 
@@ -27,17 +28,17 @@ export default async function SettingsPage({
   const { saved } = await searchParams;
 
   return (
-    <div className="page">
-      <div className="page-bar">
-        <a href="/admin">← Back to admin</a>
-      </div>
-      <h1>School branding</h1>
+    <div
+      className="page"
+      style={{ display: "flex", flexDirection: "column", gap: "var(--space-6)" }}
+    >
+      <PageHeader
+        eyebrow="Branding"
+        title="School branding"
+        intro="Set the name, logo, theme color, and hero copy your school renders across the public directory."
+      />
 
-      {saved && (
-        <p className="muted" style={{ marginTop: 0 }}>
-          Saved.
-        </p>
-      )}
+      {saved && <p className="flash flash-ok">Saved.</p>}
 
       <div className="panel">
         <form action={updateBranding} className="stack">
@@ -106,7 +107,7 @@ export default async function SettingsPage({
         </form>
       </div>
 
-      <p className="muted" style={{ marginTop: "var(--space-5)" }}>
+      <p className="muted" style={{ margin: 0 }}>
         Looking for CRM webhooks? They moved to their own console —{" "}
         <a href="/admin/webhooks">Integrations → CRM webhooks</a>.
       </p>

@@ -2,6 +2,7 @@ import { getSchoolDetail } from "@directory/core";
 import {
   ArrowLeft,
   Bot,
+  Building2,
   CalendarDays,
   CreditCard,
   ExternalLink,
@@ -16,7 +17,8 @@ import {
 import { redirect } from "next/navigation";
 
 import { getAuthContext, isSuperadmin } from "../../../lib/auth-session.ts";
-import { LogoutButton } from "../../logout-button.tsx";
+import { PageHeader } from "../../admin/_components/PageHeader.tsx";
+import { SuperadminBar } from "../_bar.tsx";
 import { MiniStat } from "../_stat.tsx";
 import styles from "../superadmin.module.css";
 
@@ -41,26 +43,17 @@ export default async function SuperadminSchoolPage({
   if (!school) {
     return (
       <div className="page">
-        <div className="page-bar">
-          <a href="/superadmin">← Console</a>
-          <span
-            className="muted"
-            style={{
-              fontSize: "var(--fs-sm)",
-              display: "inline-flex",
-              gap: "var(--space-3)",
-              alignItems: "center",
-            }}
-          >
-            {ctx.name} (superadmin) <LogoutButton />
-          </span>
-        </div>
+        <SuperadminBar
+          name={ctx.name}
+          backHref="/superadmin"
+          backLabel="← Platform"
+        />
         <h1>School not found</h1>
         <p className="muted" style={{ marginTop: 0 }}>
           No school exists for <code>{org}</code> — it may have been deleted.
         </p>
         <a className="btn btn-outline" href="/superadmin">
-          <ArrowLeft size={16} aria-hidden /> Back to console
+          <ArrowLeft size={16} aria-hidden /> Back to platform
         </a>
       </div>
     );
@@ -71,45 +64,38 @@ export default async function SuperadminSchoolPage({
 
   return (
     <div className="page">
-      <div className="page-bar">
-        <a href="/superadmin">← Console</a>
-        <span
-          className="muted"
-          style={{
-            fontSize: "var(--fs-sm)",
-            display: "inline-flex",
-            gap: "var(--space-3)",
-            alignItems: "center",
-          }}
-        >
-          {ctx.name} (superadmin) <LogoutButton />
-        </span>
-      </div>
+      <SuperadminBar
+        name={ctx.name}
+        backHref="/superadmin"
+        backLabel="← Platform"
+      />
 
       {/* ---- Header ---- */}
-      <span className="eyebrow">School</span>
-      <h1 style={{ marginTop: 0, marginBottom: "var(--space-2)" }}>
-        {school.themeColor ? (
-          <span
-            className={styles.swatch}
-            style={{
-              background: school.themeColor,
-              marginRight: "var(--space-3)",
-              verticalAlign: "middle",
-            }}
-            aria-hidden
-          />
-        ) : null}
-        {school.name}
-      </h1>
-      <p className="muted" style={{ marginTop: 0 }}>
-        <a className={styles.slugLink} href={`/${school.slug}`}>
-          /{school.slug} <ExternalLink size={13} aria-hidden />
-        </a>{" "}
-        · created {new Date(school.createdAt).toLocaleDateString()}
-      </p>
+      <PageHeader
+        eyebrow="School"
+        title={school.name}
+        icon={
+          school.themeColor ? (
+            <span
+              className={styles.swatch}
+              style={{ background: school.themeColor, width: 16, height: 16 }}
+              aria-hidden
+            />
+          ) : (
+            <Building2 aria-hidden />
+          )
+        }
+        intro={
+          <>
+            <a className={styles.slugLink} href={`/${school.slug}`}>
+              /{school.slug} <ExternalLink size={13} aria-hidden />
+            </a>{" "}
+            · created {new Date(school.createdAt).toLocaleDateString()}
+          </>
+        }
+      />
 
-      <div className={styles.detailGrid}>
+      <div className={styles.detailGrid} style={{ marginTop: "var(--space-6)" }}>
         {/* ---- Left column: members + counts ---- */}
         <div className="stack">
           <section className="panel">
@@ -131,26 +117,28 @@ export default async function SuperadminSchoolPage({
                 No members.
               </p>
             ) : (
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {school.members.map((m) => (
-                    <tr key={m.id}>
-                      <td>{m.name}</td>
-                      <td className={styles.email}>{m.email}</td>
-                      <td>
-                        <span className={styles.roleTag}>{m.role}</span>
-                      </td>
+              <div className="table-card">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Role</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {school.members.map((m) => (
+                      <tr key={m.id}>
+                        <td>{m.name}</td>
+                        <td className="mono">{m.email}</td>
+                        <td>
+                          <span className={styles.roleTag}>{m.role}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </section>
 
@@ -205,7 +193,7 @@ export default async function SuperadminSchoolPage({
               />
               Subscription
             </h2>
-            <span className={`badge ${paying ? "badge-online" : "pill-static"}`}>
+            <span className={`badge ${paying ? "badge-online" : "badge-neutral"}`}>
               {sub?.status ?? "none"}
             </span>
           </div>
@@ -244,7 +232,7 @@ export default async function SuperadminSchoolPage({
         <span className={styles.windowNote}>last {school.recent.windowDays} days</span>
       </div>
       <div className={styles.miniGrid}>
-        <MiniStat icon={Bot} label="Agent queries" value={school.recent.agentQueries} />
+        <MiniStat icon={Bot} label="Agent queries" value={school.recent.agentQueries} lead />
         <MiniStat icon={Search} label="Searches" value={school.recent.searches} />
         <MiniStat icon={Eye} label="Profile views" value={school.recent.profileViews} />
         <MiniStat icon={UserPlus} label="Leads" value={school.recent.leads} />

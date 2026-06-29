@@ -1,7 +1,9 @@
 import { listSchoolGraduates } from "@directory/core";
+import { Users } from "lucide-react";
 import { redirect } from "next/navigation";
 
 import { getAuthContext } from "../../../lib/auth-session.ts";
+import { PageHeader } from "../_components/PageHeader.tsx";
 import { emitClaimLink } from "../actions.ts";
 import styles from "../admin-shell.module.css";
 import { bulkImportRoster } from "./actions.ts";
@@ -58,14 +60,17 @@ export default async function RosterPage({
 
   return (
     <div className="stack" style={{ gap: "var(--space-6)" }}>
-      <header>
-        <span className="eyebrow">Roster</span>
-        <h1 style={{ margin: "0 0 var(--space-2)" }}>Facilitators</h1>
-        <p className="muted" style={{ margin: 0 }}>
-          {graduates.length} on roster · {claimedCount} claimed. Invite
-          graduates to claim their profile, or bulk-import a new cohort.
-        </p>
-      </header>
+      <PageHeader
+        eyebrow="Roster"
+        title="Facilitator roster"
+        icon={<Users />}
+        intro={
+          <>
+            {graduates.length} on roster · {claimedCount} claimed. Invite
+            graduates to claim their profile, or bulk-import a new cohort.
+          </>
+        }
+      />
 
       {/* Import feedback */}
       {hasResult && (
@@ -86,67 +91,83 @@ export default async function RosterPage({
       <section className="panel">
         <h2 style={{ fontSize: "var(--fs-h3)", marginTop: 0 }}>Current roster</h2>
         {graduates.length === 0 ? (
-          <p className="muted" style={{ margin: 0 }}>
-            No facilitators yet. Use bulk import below to seed your cohort.
-          </p>
+          <div className="empty-state">
+            <span className="empty-state__icon">
+              <Users size={28} aria-hidden />
+            </span>
+            <h3>No facilitators yet</h3>
+            <p>
+              Seed your cohort with the bulk import below — paste a JSON array
+              or CSV and each row becomes an unclaimed draft profile ready to
+              invite.
+            </p>
+          </div>
         ) : (
           <div className={styles.tableWrap}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Facilitator</th>
-                  <th>Status</th>
-                  <th>Claim</th>
-                  <th style={{ textAlign: "right" }}>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {graduates.map((g) => (
-                  <tr key={g.id}>
-                    <td>
-                      <span style={{ fontWeight: 550 }}>{g.displayName}</span>
-                      <span
-                        className="muted"
-                        style={{ display: "block", fontSize: "var(--fs-xs)" }}
-                      >
-                        {g.slug}
-                      </span>
-                    </td>
-                    <td>
-                      <span className="badge badge-verified">{g.status}</span>
-                    </td>
-                    <td>
-                      <span
-                        className={`badge ${g.claimed ? "badge-verified" : "badge-online"}`}
-                      >
-                        {g.claimed ? "claimed" : "unclaimed"}
-                      </span>
-                    </td>
-                    <td>
-                      {g.claimed ? (
-                        <span className="muted" style={{ fontSize: "var(--fs-xs)" }}>
-                          —
-                        </span>
-                      ) : (
-                        <form action={emitClaimLink} className={styles.tableActions}>
-                          <input type="hidden" name="profileId" value={g.id} />
-                          <input
-                            className="input"
-                            name="email"
-                            type="email"
-                            placeholder="email (optional)"
-                            style={{ maxWidth: "13rem" }}
-                          />
-                          <button type="submit" className="btn btn-outline btn-sm">
-                            Emit claim link
-                          </button>
-                        </form>
-                      )}
-                    </td>
+            <div className="table-card">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Facilitator</th>
+                    <th>Status</th>
+                    <th>Claim</th>
+                    <th style={{ textAlign: "right" }}>Action</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {graduates.map((g) => (
+                    <tr key={g.id}>
+                      <td>
+                        <span style={{ fontWeight: 550 }}>{g.displayName}</span>
+                        <span
+                          className="mono"
+                          style={{ display: "block", fontSize: "var(--fs-xs)" }}
+                        >
+                          {g.slug}
+                        </span>
+                      </td>
+                      <td>
+                        <span
+                          className={`badge ${
+                            g.status === "published" ? "badge-online" : "badge-neutral"
+                          }`}
+                        >
+                          {g.status}
+                        </span>
+                      </td>
+                      <td>
+                        <span
+                          className={`badge ${g.claimed ? "badge-online" : "badge-warning"}`}
+                        >
+                          {g.claimed ? "Claimed" : "Unclaimed"}
+                        </span>
+                      </td>
+                      <td>
+                        {g.claimed ? (
+                          <span className="muted" style={{ fontSize: "var(--fs-xs)" }}>
+                            —
+                          </span>
+                        ) : (
+                          <form action={emitClaimLink} className={styles.tableActions}>
+                            <input type="hidden" name="profileId" value={g.id} />
+                            <input
+                              className="input"
+                              name="email"
+                              type="email"
+                              placeholder="email (optional)"
+                              style={{ maxWidth: "13rem" }}
+                            />
+                            <button type="submit" className="btn btn-outline btn-sm">
+                              Emit claim link
+                            </button>
+                          </form>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
         <p className="muted" style={{ fontSize: "var(--fs-xs)", margin: "var(--space-4) 0 0" }}>

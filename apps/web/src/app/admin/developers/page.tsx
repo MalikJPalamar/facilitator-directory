@@ -5,7 +5,7 @@ import {
   Boxes,
   Code2,
   KeyRound,
-  Plug,
+  Lock,
   ShieldCheck,
   Terminal,
 } from "lucide-react";
@@ -15,6 +15,7 @@ import { redirect } from "next/navigation";
 import { getAuthContext } from "../../../lib/auth-session.ts";
 import { CodeBlock } from "../_components/CodeBlock.tsx";
 import { CopyButton } from "../_components/CopyButton.tsx";
+import { PageHeader } from "../_components/PageHeader.tsx";
 import { createKey, revokeKey } from "./actions.ts";
 import styles from "./developers.module.css";
 
@@ -207,115 +208,113 @@ directory profile edit --school ${slug} --slug jane-doe --field headline="Now bo
 directory keys create --name "crm" --scope leads:write --scope leads:read`;
 
   return (
-    <div className="page">
-      <div className={styles.hub}>
-        {/* ── Hero ─────────────────────────────────────────────── */}
-        <header className={styles.hero}>
-          <span className={styles.heroIcon}>
-            <Plug size={24} strokeWidth={1.8} />
+    <div className={styles.hub}>
+      {/* Shared console header — matches every other admin surface. The admin
+          shell's .content already supplies the max-width + padding, so this
+          renders straight into it (no extra .page wrapper / indent). */}
+      <PageHeader
+        eyebrow="Developers"
+        title="Connect to The Directory"
+        intro="Connect agents, CRMs, and your own code to your directory. One REST API, an MCP server, and a CLI — all authenticated with org-scoped keys you mint and revoke right here."
+        icon={<Terminal size={24} strokeWidth={1.8} />}
+      />
+
+      {/* ── In-page nav ──────────────────────────────────────── */}
+      <nav className={styles.nav} aria-label="Developer sections">
+        <a className={styles.navLink} href="#overview">
+          <BookOpen size={15} /> Overview
+        </a>
+        <a className={styles.navLink} href="#keys">
+          <KeyRound size={15} /> API keys
+        </a>
+        <a className={styles.navLink} href="#mcp">
+          <Boxes size={15} /> MCP
+        </a>
+        <a className={styles.navLink} href="#cli">
+          <Terminal size={15} /> CLI
+        </a>
+        <a className={styles.navLink} href="#code">
+          <Code2 size={15} /> Code samples
+        </a>
+      </nav>
+
+      {/* ── 1. Overview / connection essentials ──────────────── */}
+      <section id="overview" className={styles.section}>
+        <div className={styles.sectionHead}>
+          <span className={styles.sectionIcon}>
+            <BookOpen size={20} strokeWidth={1.8} />
           </span>
-          <h1 className={styles.heroTitle}>Developers</h1>
-          <p className={styles.heroLead}>
-            Connect agents, CRMs, and your own code to your directory. One REST
-            API, an MCP server, and a CLI — all authenticated with org-scoped
-            keys you mint and revoke right here.
-          </p>
-        </header>
+          <h2>Connection essentials</h2>
+        </div>
+        <p className={styles.sectionSub}>
+          Everything machine-facing is based at{" "}
+          <code>{"<origin>/api"}</code>. Agents can auto-discover the API from
+          the well-known doc, or read the OpenAPI schema directly.
+        </p>
 
-        {/* ── In-page nav ──────────────────────────────────────── */}
-        <nav className={styles.nav} aria-label="Developer sections">
-          <a className={styles.navLink} href="#overview">
-            <BookOpen size={15} /> Overview
-          </a>
-          <a className={styles.navLink} href="#keys">
-            <KeyRound size={15} /> API keys
-          </a>
-          <a className={styles.navLink} href="#mcp">
-            <Boxes size={15} /> MCP
-          </a>
-          <a className={styles.navLink} href="#cli">
-            <Terminal size={15} /> CLI
-          </a>
-          <a className={styles.navLink} href="#code">
-            <Code2 size={15} /> Code samples
-          </a>
-        </nav>
-
-        {/* ── 1. Overview / connection essentials ──────────────── */}
-        <section id="overview" className={styles.section}>
-          <div className={styles.sectionHead}>
-            <span className={styles.sectionIcon}>
-              <BookOpen size={20} strokeWidth={1.8} />
-            </span>
-            <h2>Connection essentials</h2>
-          </div>
-          <p className={styles.sectionSub}>
-            Everything machine-facing is based at{" "}
-            <code>{"<origin>/api"}</code>. Agents can auto-discover the API from
-            the well-known doc, or read the OpenAPI schema directly.
-          </p>
-
-          <div className={styles.essentials}>
-            <div className={styles.essential}>
-              <span className={styles.essentialLabel}>REST base URL</span>
-              <div className={styles.essentialValue}>
-                <code>{apiBase}</code>
-                <CopyButton value={apiBase} label="Copy" />
-              </div>
-            </div>
-            <div className={styles.essential}>
-              <span className={styles.essentialLabel}>MCP endpoint</span>
-              <div className={styles.essentialValue}>
-                <code>{mcpUrl}</code>
-                <CopyButton value={mcpUrl} label="Copy" />
-              </div>
-            </div>
-            <div className={styles.essential}>
-              <span className={styles.essentialLabel}>Discovery & schema</span>
-              <div className={styles.essentialLinks}>
-                <a className="btn btn-outline btn-sm" href={discoveryUrl} target="_blank" rel="noreferrer">
-                  ai-directory.json
-                </a>
-                <a className="btn btn-outline btn-sm" href={openApiUrl} target="_blank" rel="noreferrer">
-                  OpenAPI
-                </a>
-                <a className="btn btn-outline btn-sm" href={docsUrl} target="_blank" rel="noreferrer">
-                  API docs
-                </a>
-              </div>
+        <div className={styles.essentials}>
+          <div className={styles.essential}>
+            <span className={styles.essentialLabel}>REST base URL</span>
+            <div className={styles.essentialValue}>
+              <code>{apiBase}</code>
+              <CopyButton value={apiBase} label="Copy" />
             </div>
           </div>
-
-          <div className={styles.authNote} style={{ marginTop: "var(--space-4)" }}>
-            <ShieldCheck size={20} strokeWidth={1.9} style={{ flex: "0 0 auto", marginTop: 1 }} />
-            <p>
-              <strong>How machine auth works.</strong> Mint an org-scoped key
-              below — it looks like <code>dk_live_…</code> — and send it on every
-              request as <code>Authorization: Bearer dk_live_…</code>. Each key
-              carries a set of <strong>scopes</strong> (e.g.{" "}
-              <code>leads:write</code>) that gate what it can do. Public reads
-              need no key; a key still adds attribution. Plaintext is shown{" "}
-              <em>once</em> at creation and stored only as a hash.
-            </p>
+          <div className={styles.essential}>
+            <span className={styles.essentialLabel}>MCP endpoint</span>
+            <div className={styles.essentialValue}>
+              <code>{mcpUrl}</code>
+              <CopyButton value={mcpUrl} label="Copy" />
+            </div>
           </div>
-        </section>
-
-        <hr className="divider" />
-
-        {/* ── 2. API keys (inline management) ──────────────────── */}
-        <section id="keys" className={styles.section}>
-          <div className={styles.sectionHead}>
-            <span className={styles.sectionIcon}>
-              <KeyRound size={20} strokeWidth={1.8} />
-            </span>
-            <h2>API keys</h2>
+          <div className={styles.essential}>
+            <span className={styles.essentialLabel}>Discovery & schema</span>
+            <div className={styles.essentialLinks}>
+              <a className="btn btn-outline btn-sm" href={discoveryUrl} target="_blank" rel="noreferrer">
+                ai-directory.json
+              </a>
+              <a className="btn btn-outline btn-sm" href={openApiUrl} target="_blank" rel="noreferrer">
+                OpenAPI
+              </a>
+              <a className="btn btn-outline btn-sm" href={docsUrl} target="_blank" rel="noreferrer">
+                API docs
+              </a>
+            </div>
           </div>
-          <p className={styles.sectionSub}>
-            Mint keys for each integration and grant only the scopes it needs.
-            Revoke instantly if a key leaks.
+        </div>
+
+        <div className={styles.authNote} style={{ marginTop: "var(--space-4)" }}>
+          <ShieldCheck size={20} strokeWidth={1.9} style={{ flex: "0 0 auto", marginTop: 1 }} />
+          <p>
+            <strong>How machine auth works.</strong> Mint an org-scoped key
+            below — it looks like <code>dk_live_…</code> — and send it on every
+            request as <code>Authorization: Bearer dk_live_…</code>. Each key
+            carries a set of <strong>scopes</strong> (e.g.{" "}
+            <code>leads:write</code>) that gate what it can do. Public reads
+            need no key; a key still adds attribution. Plaintext is shown{" "}
+            <em>once</em> at creation and stored only as a hash.
           </p>
+        </div>
+      </section>
 
-          {fresh && (
+      <hr className="divider" />
+
+      {/* ── 2. API keys (inline management) ──────────────────── */}
+      <section id="keys" className={styles.section}>
+        <div className={styles.sectionHead}>
+          <span className={styles.sectionIcon}>
+            <KeyRound size={20} strokeWidth={1.8} />
+          </span>
+          <h2>API keys</h2>
+        </div>
+        <p className={styles.sectionSub}>
+          Mint keys for each integration and grant only the scopes it needs.
+          Revoke instantly if a key leaks.
+        </p>
+
+        {fresh && (
+          <>
+            <p className="flash flash-ok">Key created.</p>
             <div className={styles.revealBanner}>
               <strong>Copy this key now — it won&apos;t be shown again:</strong>
               <div className={styles.revealRow}>
@@ -325,266 +324,270 @@ directory keys create --name "crm" --scope leads:write --scope leads:read`;
                 <CopyButton value={fresh} label="Copy key" />
               </div>
             </div>
-          )}
-          {revoked && (
-            <p className="muted" style={{ marginTop: 0 }}>
-              Key revoked.
-            </p>
-          )}
+          </>
+        )}
+        {revoked && <p className="flash flash-ok">Key revoked.</p>}
 
-          <div className="panel">
-            <h3 style={{ marginTop: 0, fontSize: "var(--fs-h3)" }}>Create a key</h3>
-            <form action={createKey} className="stack">
-              <div className="stack" style={{ gap: "var(--space-2)" }}>
-                <label className="label" htmlFor="key-name">
-                  Label
-                </label>
-                <input
-                  id="key-name"
-                  name="name"
-                  type="text"
-                  className="input"
-                  placeholder="e.g. Acme CRM"
-                  maxLength={80}
-                />
+        <div className="panel">
+          <h3 style={{ marginTop: 0, fontSize: "var(--fs-h3)" }}>Create a key</h3>
+          <form action={createKey} className="stack">
+            <div className="stack" style={{ gap: "var(--space-2)" }}>
+              <label className="label" htmlFor="key-name">
+                Label
+              </label>
+              <input
+                id="key-name"
+                name="name"
+                type="text"
+                className="input"
+                placeholder="e.g. Acme CRM"
+                maxLength={80}
+              />
+            </div>
+            <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
+              <legend className="label" style={{ marginBottom: "var(--space-3)" }}>
+                Scopes
+              </legend>
+              <div className={styles.scopeGrid}>
+                {ALL_SCOPES.map((s) => (
+                  <label key={s} className={styles.scope}>
+                    <input
+                      type="checkbox"
+                      name="scopes"
+                      value={s}
+                      defaultChecked={s === "directory:read"}
+                    />
+                    <span className={styles.scopeText}>
+                      <code>{s}</code>
+                      <span className={styles.scopeHelp}>{SCOPE_HELP[s]}</span>
+                    </span>
+                  </label>
+                ))}
               </div>
-              <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
-                <legend className="label" style={{ marginBottom: "var(--space-3)" }}>
-                  Scopes
-                </legend>
-                <div className={styles.scopeGrid}>
-                  {ALL_SCOPES.map((s) => (
-                    <label key={s} className={styles.scope}>
-                      <input
-                        type="checkbox"
-                        name="scopes"
-                        value={s}
-                        defaultChecked={s === "directory:read"}
-                      />
-                      <span className={styles.scopeText}>
-                        <code>{s}</code>
-                        <span className={styles.scopeHelp}>{SCOPE_HELP[s]}</span>
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </fieldset>
-              <div>
-                <button type="submit" className="btn btn-primary">
-                  Create key
-                </button>
-              </div>
-            </form>
-          </div>
-
-          <div className="panel" style={{ marginTop: "var(--space-4)" }}>
-            <h3 style={{ marginTop: 0, fontSize: "var(--fs-h3)" }}>Existing keys</h3>
-            {keys.length === 0 ? (
-              <p className="muted" style={{ margin: 0 }}>
-                No keys yet. Create one above to start connecting.
+              <p className={styles.scopeNote}>
+                A key needs at least one scope to be useful. If you clear them
+                all, <code>directory:read</code> (public reads) is granted by
+                default so the key can still authenticate.
               </p>
-            ) : (
-              <div className={styles.tableWrap}>
-                <table className={styles.table}>
-                  <thead>
-                    <tr>
-                      <th>Label</th>
-                      <th>Prefix</th>
-                      <th>Scopes</th>
-                      <th>Last used</th>
-                      <th>Created</th>
-                      <th aria-label="Actions" />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {keys.map((k) => {
-                      const isRevoked = k.revokedAt != null;
-                      const isExpired =
-                        k.expiresAt != null && k.expiresAt.getTime() < Date.now();
-                      return (
-                        <tr key={k.id} className={isRevoked ? styles.rowRevoked : undefined}>
-                          <td>{k.name}</td>
-                          <td>
-                            <code>{k.prefix}…</code>
-                          </td>
-                          <td>
-                            {k.scopes.length === 0 ? (
-                              <span className="muted">—</span>
-                            ) : (
-                              <div className={styles.chipRow}>
-                                {k.scopes.map((s) => (
-                                  <span key={s} className={styles.scopeChip}>
-                                    {s}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-                          </td>
-                          <td className="muted">
-                            {isRevoked
-                              ? "revoked"
-                              : isExpired
-                                ? "expired"
-                                : k.lastUsedAt
-                                  ? k.lastUsedAt.toISOString().slice(0, 10)
-                                  : "never"}
-                          </td>
-                          <td className="muted">{k.createdAt.toISOString().slice(0, 10)}</td>
-                          <td style={{ textAlign: "right" }}>
-                            {!isRevoked && (
-                              <form action={revokeKey}>
-                                <input type="hidden" name="keyId" value={k.id} />
-                                <button type="submit" className="btn btn-sm">
-                                  Revoke
-                                </button>
-                              </form>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </section>
-
-        <hr className="divider" />
-
-        {/* ── 3. MCP ───────────────────────────────────────────── */}
-        <section id="mcp" className={styles.section}>
-          <div className={styles.sectionHead}>
-            <span className={styles.sectionIcon}>
-              <Boxes size={20} strokeWidth={1.8} />
-            </span>
-            <h2>MCP server</h2>
-          </div>
-          <p className={styles.sectionSub}>
-            The Model Context Protocol server lets AI clients (Claude Desktop,
-            Cursor, …) call your directory as native tools over streamable HTTP.
-            Authenticate the transport with a Bearer key — read tools are public,
-            write tools need the matching scope.
-          </p>
-
-          <div className={styles.essential} style={{ marginBottom: "var(--space-4)" }}>
-            <span className={styles.essentialLabel}>MCP endpoint</span>
-            <div className={styles.essentialValue}>
-              <code>{mcpUrl}</code>
-              <CopyButton value={mcpUrl} label="Copy" />
+            </fieldset>
+            <div>
+              <button type="submit" className="btn btn-primary">
+                Create key
+              </button>
             </div>
-          </div>
+          </form>
+        </div>
 
-          <h3 style={{ fontSize: "var(--fs-h3)" }}>Tools</h3>
-          <div className={styles.toolGrid}>
-            {MCP_TOOLS.map((t) => (
-              <div key={t.name} className={styles.tool}>
-                <span className={styles.toolName}>{t.name}</span>
-                <p className={styles.toolDesc}>{t.desc}</p>
-                <span
-                  className={styles.toolAuth}
-                  style={{ alignSelf: "flex-start" }}
-                >
-                  <span
-                    className={`badge ${t.auth === "public" ? "badge-online" : "badge-verified"}`}
-                  >
-                    {t.auth === "public" ? "public" : t.auth}
+        <div className="panel" style={{ marginTop: "var(--space-4)" }}>
+          <h3 style={{ marginTop: 0, fontSize: "var(--fs-h3)" }}>Existing keys</h3>
+          {keys.length === 0 ? (
+            <p className="muted" style={{ margin: 0 }}>
+              No keys yet. Create one above to start connecting.
+            </p>
+          ) : (
+            <div className={styles.tableWrap}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Label</th>
+                    <th>Prefix</th>
+                    <th>Scopes</th>
+                    <th>Last used</th>
+                    <th>Created</th>
+                    <th aria-label="Actions" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {keys.map((k) => {
+                    const isRevoked = k.revokedAt != null;
+                    const isExpired =
+                      k.expiresAt != null && k.expiresAt.getTime() < Date.now();
+                    return (
+                      <tr key={k.id} className={isRevoked ? styles.rowRevoked : undefined}>
+                        <td>{k.name}</td>
+                        <td>
+                          <code>{k.prefix}…</code>
+                        </td>
+                        <td>
+                          {k.scopes.length === 0 ? (
+                            <span className="muted">—</span>
+                          ) : (
+                            <div className={styles.chipRow}>
+                              {k.scopes.map((s) => (
+                                <span key={s} className={styles.scopeChip}>
+                                  {s}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </td>
+                        <td className="muted">
+                          {isRevoked
+                            ? "revoked"
+                            : isExpired
+                              ? "expired"
+                              : k.lastUsedAt
+                                ? k.lastUsedAt.toISOString().slice(0, 10)
+                                : "never"}
+                        </td>
+                        <td className="muted">{k.createdAt.toISOString().slice(0, 10)}</td>
+                        <td style={{ textAlign: "right" }}>
+                          {!isRevoked && (
+                            <form action={revokeKey}>
+                              <input type="hidden" name="keyId" value={k.id} />
+                              <button type="submit" className="btn btn-sm">
+                                Revoke
+                              </button>
+                            </form>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <hr className="divider" />
+
+      {/* ── 3. MCP ───────────────────────────────────────────── */}
+      <section id="mcp" className={styles.section}>
+        <div className={styles.sectionHead}>
+          <span className={styles.sectionIcon}>
+            <Boxes size={20} strokeWidth={1.8} />
+          </span>
+          <h2>MCP server</h2>
+        </div>
+        <p className={styles.sectionSub}>
+          The Model Context Protocol server lets AI clients (Claude Desktop,
+          Cursor, …) call your directory as native tools over streamable HTTP.
+          Authenticate the transport with a Bearer key — read tools are public,
+          write tools need the matching scope.
+        </p>
+
+        <div className={styles.essential} style={{ marginBottom: "var(--space-4)" }}>
+          <span className={styles.essentialLabel}>MCP endpoint</span>
+          <div className={styles.essentialValue}>
+            <code>{mcpUrl}</code>
+            <CopyButton value={mcpUrl} label="Copy" />
+          </div>
+        </div>
+
+        <h3 style={{ fontSize: "var(--fs-h3)" }}>Tools</h3>
+        <div className={styles.toolGrid}>
+          {MCP_TOOLS.map((t) => (
+            <div key={t.name} className={styles.tool}>
+              <span className={styles.toolName}>{t.name}</span>
+              <p className={styles.toolDesc}>{t.desc}</p>
+              <span
+                className={styles.toolAuth}
+                style={{ alignSelf: "flex-start" }}
+              >
+                {t.auth === "public" ? (
+                  <span className="badge badge-online">public</span>
+                ) : (
+                  <span className={`badge badge-neutral ${styles.scopeBadge}`}>
+                    <Lock size={11} strokeWidth={2.2} />
+                    {t.auth}
                   </span>
-                </span>
-              </div>
-            ))}
-          </div>
-
-          <h3 style={{ fontSize: "var(--fs-h3)", marginTop: "var(--space-6)" }}>
-            Client config
-          </h3>
-          <p className={styles.sectionSub} style={{ marginTop: 0 }}>
-            Drop this into your MCP client (Claude Desktop / Cursor). Replace the
-            placeholder with a key you minted above.
-          </p>
-          <CodeBlock code={mcpConfig} lang="json" />
-        </section>
-
-        <hr className="divider" />
-
-        {/* ── 4. CLI ───────────────────────────────────────────── */}
-        <section id="cli" className={styles.section}>
-          <div className={styles.sectionHead}>
-            <span className={styles.sectionIcon}>
-              <Terminal size={20} strokeWidth={1.8} />
-            </span>
-            <h2>Command-line tool</h2>
-          </div>
-          <p className={styles.sectionSub}>
-            <code>@directory/cli</code> is a thin, zero-dependency HTTP client
-            over the same REST API — handy for scripts, CI, and one-off ops.
-          </p>
-
-          <div className={styles.steps}>
-            <div className={styles.step}>
-              <span className={styles.stepNum}>1</span>
-              <div className={styles.stepBody}>
-                <p>Install the CLI (or run it on demand with npx).</p>
-                <CodeBlock code={cliInstall} lang="bash" />
-              </div>
+                )}
+              </span>
             </div>
-            <div className={styles.step}>
-              <span className={styles.stepNum}>2</span>
-              <div className={styles.stepBody}>
-                <p>
-                  Point it at your deployment and a key. Flags override env —{" "}
-                  <code>DIRECTORY_BASE_URL</code> and <code>DIRECTORY_API_KEY</code>.
-                </p>
-                <CodeBlock code={cliEnv} lang="bash" />
-              </div>
-            </div>
-            <div className={styles.step}>
-              <span className={styles.stepNum}>3</span>
-              <div className={styles.stepBody}>
-                <p>Run commands. Public commands work without a key.</p>
-                <CodeBlock code={cliExamples} lang="bash" />
-              </div>
+          ))}
+        </div>
+
+        <h3 style={{ fontSize: "var(--fs-h3)", marginTop: "var(--space-6)" }}>
+          Client config
+        </h3>
+        <p className={styles.sectionSub} style={{ marginTop: 0 }}>
+          Drop this into your MCP client (Claude Desktop / Cursor). Replace the
+          placeholder with a key you minted above.
+        </p>
+        <CodeBlock code={mcpConfig} lang="json" />
+      </section>
+
+      <hr className="divider" />
+
+      {/* ── 4. CLI ───────────────────────────────────────────── */}
+      <section id="cli" className={styles.section}>
+        <div className={styles.sectionHead}>
+          <span className={styles.sectionIcon}>
+            <Terminal size={20} strokeWidth={1.8} />
+          </span>
+          <h2>Command-line tool</h2>
+        </div>
+        <p className={styles.sectionSub}>
+          <code>@directory/cli</code> is a thin, zero-dependency HTTP client
+          over the same REST API — handy for scripts, CI, and one-off ops.
+        </p>
+
+        <div className={styles.steps}>
+          <div className={styles.step}>
+            <span className={styles.stepNum}>1</span>
+            <div className={styles.stepBody}>
+              <p>Install the CLI (or run it on demand with npx).</p>
+              <CodeBlock code={cliInstall} lang="bash" />
             </div>
           </div>
-        </section>
-
-        <hr className="divider" />
-
-        {/* ── 5. Code samples ──────────────────────────────────── */}
-        <section id="code" className={styles.section}>
-          <div className={styles.sectionHead}>
-            <span className={styles.sectionIcon}>
-              <Code2 size={20} strokeWidth={1.8} />
-            </span>
-            <h2>Code samples</h2>
-          </div>
-          <p className={styles.sectionSub}>
-            The same two calls — GET a search and POST a lead — in three runtimes,
-            pre-filled with your base URL. Swap in a real key and school slug.
-          </p>
-
-          <div className={styles.samples}>
-            <div className={styles.sample}>
-              <div className={styles.sampleHead}>
-                <h3>curl</h3>
-              </div>
-              <CodeBlock code={curlSample} lang="bash" />
-            </div>
-            <div className={styles.sample}>
-              <div className={styles.sampleHead}>
-                <h3>JavaScript (fetch)</h3>
-              </div>
-              <CodeBlock code={jsSample} lang="javascript" />
-            </div>
-            <div className={styles.sample}>
-              <div className={styles.sampleHead}>
-                <h3>Python (requests)</h3>
-              </div>
-              <CodeBlock code={pySample} lang="python" />
+          <div className={styles.step}>
+            <span className={styles.stepNum}>2</span>
+            <div className={styles.stepBody}>
+              <p>
+                Point it at your deployment and a key. Flags override env —{" "}
+                <code>DIRECTORY_BASE_URL</code> and <code>DIRECTORY_API_KEY</code>.
+              </p>
+              <CodeBlock code={cliEnv} lang="bash" />
             </div>
           </div>
-        </section>
-      </div>
+          <div className={styles.step}>
+            <span className={styles.stepNum}>3</span>
+            <div className={styles.stepBody}>
+              <p>Run commands. Public commands work without a key.</p>
+              <CodeBlock code={cliExamples} lang="bash" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <hr className="divider" />
+
+      {/* ── 5. Code samples ──────────────────────────────────── */}
+      <section id="code" className={styles.section}>
+        <div className={styles.sectionHead}>
+          <span className={styles.sectionIcon}>
+            <Code2 size={20} strokeWidth={1.8} />
+          </span>
+          <h2>Code samples</h2>
+        </div>
+        <p className={styles.sectionSub}>
+          The same two calls — GET a search and POST a lead — in three runtimes,
+          pre-filled with your base URL. Swap in a real key and school slug.
+        </p>
+
+        <div className={styles.samples}>
+          <div className={styles.sample}>
+            <div className={styles.sampleHead}>
+              <h3>curl</h3>
+            </div>
+            <CodeBlock code={curlSample} lang="bash" />
+          </div>
+          <div className={styles.sample}>
+            <div className={styles.sampleHead}>
+              <h3>JavaScript (fetch)</h3>
+            </div>
+            <CodeBlock code={jsSample} lang="javascript" />
+          </div>
+          <div className={styles.sample}>
+            <div className={styles.sampleHead}>
+              <h3>Python (requests)</h3>
+            </div>
+            <CodeBlock code={pySample} lang="python" />
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

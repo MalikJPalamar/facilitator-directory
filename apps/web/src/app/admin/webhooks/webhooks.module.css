@@ -1,23 +1,16 @@
 /*
  * CRM webhooks console — co-located styles. Leans on the global design tokens
- * (--color-*, --space-*, --radius-*) so it stays consistent with the rest of
- * admin without touching globals.css. Only the bits the global utility classes
- * don't already cover live here: the endpoint cards, the deliveries table, the
- * reveal-once secret banner, and the failed/pending status badges (the global
- * .badge-online covers "succeeded").
- *
- * Local danger tokens (globals.css doesn't expose a red token) are scoped to the
- * page root so every descendant — banners, badges, table cells — resolves them.
+ * (--color-*, --space-*, --radius-*) and the shared admin primitives in
+ * globals.css (.page-header, .data-table/.table-card, .badge-*, .flash*, and the
+ * --color-danger token) so it stays consistent without touching globals.css.
+ * Only the bits the global utilities don't already cover live here: the endpoint
+ * cards, the reveal-once secret banner, the event grid/chips, and the one
+ * danger-styled Delete button.
  */
 .console {
-  --danger: #c0392b;
-  --danger-soft: #fbe9e7;
-}
-
-.intro {
-  margin: 0 0 var(--space-6);
-  color: var(--color-text-muted);
-  max-width: 64ch;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
 }
 
 /* Reveal-once secret banner — accented panel with copy affordance inline. */
@@ -43,26 +36,6 @@
   border-radius: var(--radius-sm);
   padding: 10px 12px;
   margin: 0;
-}
-
-/* Inline flash notes (saved / tested / errors). */
-.flash {
-  margin: 0 0 var(--space-5);
-  padding: 10px 14px;
-  border-radius: var(--radius-sm);
-  font-size: var(--fs-sm);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-}
-.flashOk {
-  background: var(--color-online-soft);
-  border-color: var(--color-online-soft);
-  color: var(--color-online);
-}
-.flashError {
-  background: var(--danger-soft);
-  border-color: var(--danger-soft);
-  color: var(--danger);
 }
 
 /* Endpoint list — one card per registered endpoint. */
@@ -122,15 +95,29 @@
   font-family: inherit;
   font-weight: 600;
 }
+
+/* Endpoint action toolbar. Layout is the shared `.row`; this just tightens the
+ * gap and pulls the inline test result to sit after the buttons. */
 .actions {
-  display: flex;
-  flex-wrap: wrap;
   gap: var(--space-2);
-  align-items: center;
 }
 .testResult {
   font-size: var(--fs-xs);
   font-weight: 600;
+}
+
+/* Delete — the one destructive affordance. Drawn from the global --color-danger
+ * token (no local red), styled as a quiet outline that fills in on hover so it
+ * reads as dangerous without shouting next to the ghost/outline siblings. */
+.btnDanger {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--color-danger) 32%, transparent);
+  color: var(--color-danger);
+}
+.btnDanger:hover {
+  background: var(--color-danger-soft);
+  border-color: color-mix(in srgb, var(--color-danger) 45%, transparent);
+  color: var(--color-danger);
 }
 
 /* Event checkbox grid in the add form. */
@@ -162,53 +149,18 @@
   font-weight: 600;
 }
 
-/* Deliveries log table. */
+/* Deliveries log — the table itself is the shared .data-table/.table-card; this
+ * only adds horizontal scroll on narrow viewports and the two cell tints the
+ * shared table leaves to the surface (faint meta + danger error text). */
 .tableWrap {
   overflow-x: auto;
 }
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: var(--fs-sm);
-}
-.table th {
-  text-align: left;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  font-size: var(--fs-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  padding: 8px 12px 8px 0;
-  border-bottom: 1px solid var(--color-border);
-  white-space: nowrap;
-}
-.table td {
-  padding: 10px 12px 10px 0;
-  border-bottom: 1px solid var(--color-border);
-  vertical-align: top;
-}
-.table tr:last-child td {
-  border-bottom: 0;
-}
-.mono {
-  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  font-size: var(--fs-xs);
-}
 .errorCell {
-  color: var(--danger);
+  color: var(--color-danger);
   max-width: 280px;
   word-break: break-word;
+  font-size: var(--fs-xs);
 }
 .dim {
   color: var(--color-text-faint);
-}
-
-/* Status badges — global .badge-online handles "succeeded"; add neutral+fail. */
-.badgePending {
-  background: var(--color-surface-2);
-  color: var(--color-text-muted);
-}
-.badgeFailed {
-  background: var(--danger-soft);
-  color: var(--danger);
 }

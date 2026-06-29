@@ -4,10 +4,12 @@ import {
   listWebhookEndpoints,
   type WebhookDeliveryRow,
 } from "@directory/core";
+import { Webhook } from "lucide-react";
 import { redirect } from "next/navigation";
 
 import { CodeBlock } from "../_components/CodeBlock.tsx";
 import { CopyButton } from "../_components/CopyButton.tsx";
+import { PageHeader } from "../_components/PageHeader.tsx";
 import { getAuthContext } from "../../../lib/auth-session.ts";
 import {
   createWebhook,
@@ -16,6 +18,7 @@ import {
   sendTest,
   toggleWebhook,
 } from "./actions.ts";
+import { ConfirmSubmit } from "./ConfirmSubmit.tsx";
 import styles from "./webhooks.module.css";
 
 /** Node receiver snippet, drawn from docs/webhooks.md (signature verification). */
@@ -62,10 +65,10 @@ function StatusBadge({ status }: { status: string }) {
     return <span className="badge badge-online">succeeded</span>;
   }
   if (status === "failed") {
-    return <span className={`badge ${styles.badgeFailed}`}>failed</span>;
+    return <span className="badge badge-danger">failed</span>;
   }
   // pending / anything else → neutral.
-  return <span className={`badge ${styles.badgePending}`}>{status}</span>;
+  return <span className="badge badge-neutral">{status}</span>;
 }
 
 function fmtTime(d: Date): string {
@@ -119,15 +122,20 @@ export default async function WebhooksPage({
 
   return (
     <div className={styles.console}>
-      <p className="eyebrow">Integrations</p>
-      <h1>CRM webhooks</h1>
-      <p className={styles.intro}>
-        Push directory events to your CRM in real time. Each delivery is a signed{" "}
-        <code>POST</code> carrying a <code>directory-signature</code> header
-        (HMAC-SHA256). Register an endpoint, choose your events, and verify the
-        signature on your side — the full spec lives at{" "}
-        <a href="/api/docs">/api/docs</a>.
-      </p>
+      <PageHeader
+        eyebrow="Webhooks"
+        title="CRM webhooks"
+        icon={<Webhook size={22} aria-hidden />}
+        intro={
+          <>
+            Push directory events to your CRM in real time. Each delivery is a
+            signed <code>POST</code> carrying a <code>directory-signature</code>{" "}
+            header (HMAC-SHA256). Register an endpoint, choose your events, and
+            verify the signature on your side — the full spec lives at{" "}
+            <a href="/api/docs">/api/docs</a>.
+          </>
+        }
+      />
 
       {/* ── Flash + reveal-once secret ─────────────────────────────────── */}
       {secret && (
@@ -145,21 +153,10 @@ export default async function WebhooksPage({
           </div>
         </div>
       )}
-      {saved && <p className={`${styles.flash} ${styles.flashOk}`}>Saved.</p>}
-      {tested === "ok" && (
-        <p className={`${styles.flash} ${styles.flashOk}`}>
-          Test event delivered. Check the log below for the response.
-        </p>
-      )}
-      {tested === "fail" && (
-        <p className={`${styles.flash} ${styles.flashError}`}>
-          Test event could not be delivered — your endpoint did not return a 2xx.
-          See the latest row in the deliveries log.
-        </p>
-      )}
-      {errorMessage && (
-        <p className={`${styles.flash} ${styles.flashError}`}>{errorMessage}</p>
-      )}
+      {saved && <p className="flash flash-ok">Saved.</p>}
+      {/* Test results render inline next to the row that fired them (below), so
+          no redundant top banner here — just persistent error/saved notices. */}
+      {errorMessage && <p className="flash flash-error">{errorMessage}</p>}
 
       {/* ── Add endpoint ───────────────────────────────────────────────── */}
       <div className="panel">
@@ -241,7 +238,7 @@ export default async function WebhooksPage({
                 <div className={styles.endpointHead}>
                   <span className={styles.endpointUrl}>{w.url}</span>
                   <span
-                    className={`badge ${w.enabled ? "badge-online" : styles.badgePending}`}
+                    className={`badge ${w.enabled ? "badge-online" : "badge-neutral"}`}
                   >
                     {w.enabled ? "enabled" : "disabled"}
                   </span>
@@ -268,31 +265,41 @@ export default async function WebhooksPage({
                   Added {fmtTime(w.createdAt)}
                 </div>
 
-                <div className={styles.actions}>
-                  <form action={toggleWebhook}>
-                    <input type="hidden" name="endpointId" value={w.id} />
-                    <input type="hidden" name="enabled" value={String(!w.enabled)} />
-                    <button type="submit" className="btn btn-sm">
-                      {w.enabled ? "Disable" : "Enable"}
-                    </button>
-                  </form>
+                <div className={`row ${styles.actions}`}>
+                  {/* Primary affordance: confirm the endpoint is wired up. */}
                   <form action={sendTest}>
                     <input type="hidden" name="endpointId" value={w.id} />
                     <button type="submit" className="btn btn-sm btn-outline">
                       Send test
                     </button>
                   </form>
-                  <form action={rotateWebhook}>
+                  {/* Reversible toggles → low-emphasis ghost. */}
+                  <form action={toggleWebhook}>
                     <input type="hidden" name="endpointId" value={w.id} />
-                    <button type="submit" className="btn btn-sm">
-                      Rotate secret
+                    <input type="hidden" name="enabled" value={String(!w.enabled)} />
+                    <button type="submit" className="btn btn-sm btn-ghost">
+                      {w.enabled ? "Disable" : "Enable"}
                     </button>
                   </form>
+                  {/* Rotate invalidates the CRM's stored secret → confirm first. */}
+                  <form action={rotateWebhook}>
+                    <input type="hidden" name="endpointId" value={w.id} />
+                    <ConfirmSubmit
+                      className="btn btn-sm btn-ghost"
+                      message={`Rotate the signing secret for ${w.url}? Your CRM will reject deliveries until you update it with the new secret.`}
+                    >
+                      Rotate secret
+                    </ConfirmSubmit>
+                  </form>
+                  {/* Destructive, irreversible → danger styling + confirm. */}
                   <form action={deleteWebhook}>
                     <input type="hidden" name="endpointId" value={w.id} />
-                    <button type="submit" className="btn btn-sm btn-ghost">
+                    <ConfirmSubmit
+                      className={`btn btn-sm ${styles.btnDanger}`}
+                      message={`Delete the endpoint ${w.url}? This can't be undone — you'll need to re-register it (and re-add the secret to your CRM) to resume deliveries.`}
+                    >
                       Delete
-                    </button>
+                    </ConfirmSubmit>
                   </form>
                   {tested && testedEp === w.id && (
                     <span
@@ -301,7 +308,7 @@ export default async function WebhooksPage({
                         color:
                           tested === "ok"
                             ? "var(--color-online)"
-                            : "var(--danger)",
+                            : "var(--color-danger)",
                       }}
                     >
                       {tested === "ok" ? "✓ test sent" : "✗ test failed"}
@@ -325,40 +332,43 @@ export default async function WebhooksPage({
           <p className="muted">No deliveries yet.</p>
         ) : (
           <div className={styles.tableWrap}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Event</th>
-                  <th>Endpoint</th>
-                  <th>Status</th>
-                  <th>Attempts</th>
-                  <th>Code</th>
-                  <th>Last error</th>
-                  <th>Time</th>
-                </tr>
-              </thead>
-              <tbody>
-                {deliveries.map((d: WebhookDeliveryRow) => (
-                  <tr key={d.id}>
-                    <td className={styles.mono}>{d.eventType}</td>
-                    <td className={`${styles.mono} ${styles.dim}`}>
-                      {urlByEndpoint.get(d.endpointId) ?? d.endpointId.slice(0, 8)}
-                    </td>
-                    <td>
-                      <StatusBadge status={d.status} />
-                    </td>
-                    <td>{d.attempts}</td>
-                    <td className={styles.mono}>{d.lastStatusCode ?? "—"}</td>
-                    <td className={d.lastError ? styles.errorCell : styles.dim}>
-                      {d.lastError ?? "—"}
-                    </td>
-                    <td className={`${styles.mono} ${styles.dim}`}>
-                      {fmtTime(d.createdAt)}
-                    </td>
+            <div className="table-card">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Event</th>
+                    <th>Endpoint</th>
+                    <th>Status</th>
+                    <th>Attempts</th>
+                    <th>Code</th>
+                    <th>Last error</th>
+                    <th>Time</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {deliveries.map((d: WebhookDeliveryRow) => (
+                    <tr key={d.id}>
+                      <td className="mono">{d.eventType}</td>
+                      <td className={`mono ${styles.dim}`}>
+                        {urlByEndpoint.get(d.endpointId) ??
+                          d.endpointId.slice(0, 8)}
+                      </td>
+                      <td>
+                        <StatusBadge status={d.status} />
+                      </td>
+                      <td>{d.attempts}</td>
+                      <td className="mono">{d.lastStatusCode ?? "—"}</td>
+                      <td className={d.lastError ? styles.errorCell : styles.dim}>
+                        {d.lastError ?? "—"}
+                      </td>
+                      <td className={`mono ${styles.dim}`}>
+                        {fmtTime(d.createdAt)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

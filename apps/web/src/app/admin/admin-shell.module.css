@@ -124,6 +124,38 @@
   margin: 0 auto;
   padding: var(--space-2) var(--space-5);
   overflow-x: auto;
+  /* Hide the scrollbar chrome — the edge fade below is the affordance. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.navRowInner::-webkit-scrollbar {
+  display: none;
+}
+
+/*
+ * On narrow screens the five tabs can overflow horizontally. Without a hint
+ * they look truncated, so fade the right edge to signal "scroll for more".
+ * The left edge fades too once you've scrolled past the start (the leading
+ * tab keeps its full contrast at rest because the mask starts opaque).
+ */
+@media (max-width: 720px) {
+  .navRowInner {
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      #000 var(--space-5),
+      #000 calc(100% - var(--space-6)),
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      #000 var(--space-5),
+      #000 calc(100% - var(--space-6)),
+      transparent 100%
+    );
+  }
 }
 
 /* ---------- Content container ---------- */
@@ -184,6 +216,73 @@
   flex-wrap: wrap;
   gap: var(--space-3);
   align-items: center;
+}
+
+/* ---------- Overview two-column layout ---------- */
+/*
+ * Insight (the differentiator) + KPIs lead the main column; billing + insight
+ * quality sit in a narrower right rail so the page reads as a dashboard, not a
+ * flat stack of equal-weight panels. Collapses to one column on tablet/phone.
+ */
+.overviewGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.overviewMain,
+.overviewRail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  min-width: 0;
+}
+
+@media (max-width: 960px) {
+  .overviewGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Small ▲/▼ change pill shown next to a stat value vs the prior window. */
+.statDeltaRow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin: var(--space-2) 0 0;
+  flex-wrap: wrap;
+}
+
+.statDeltaRow .statValue {
+  margin: 0;
+}
+
+.statDelta {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: var(--fs-xs);
+  font-weight: 650;
+  line-height: 1;
+  padding: 3px 7px;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+}
+
+.statDeltaUp {
+  background: var(--color-online-soft);
+  color: var(--color-online);
+}
+
+.statDeltaDown {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.statDeltaFlat {
+  background: var(--color-surface-2);
+  color: var(--color-text-muted);
 }
 
 /* ---------- Roster table ---------- */

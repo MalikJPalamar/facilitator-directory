@@ -841,3 +841,163 @@ img {
     }
   }
 }
+
+/* ============================================================================
+ * Admin/console shared primitives (v2.1 cohesion pass). One neutral badge, one
+ * data table, one danger token, and real keyboard focus rings — so the four
+ * admin surfaces read as a single product.
+ * ========================================================================== */
+
+:root {
+  --color-danger-soft: #fae9e7;
+  --color-warning: #9a6a00;
+  --color-warning-soft: #fbf1d8;
+}
+
+/* ---------- Neutral / status badges (use instead of mis-using badge-verified) ---------- */
+.badge-neutral {
+  background: var(--color-surface-2);
+  color: var(--color-text-muted);
+}
+.badge-danger {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+.badge-warning {
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+
+/* ---------- Keyboard focus rings (accessibility — was missing on actions) ---------- */
+.btn:focus-visible,
+.chip:focus-visible,
+a.focus-ring:focus-visible,
+.focus-ring:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-bg), 0 0 0 5px var(--color-accent-ring);
+}
+
+/* ---------- Shared data table (consolidates the per-surface hand-rolled tables) ---------- */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+}
+.data-table th {
+  text-align: left;
+  font-weight: 600;
+  font-size: var(--fs-xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+  padding: 0 var(--space-4) var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+.data-table td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  vertical-align: middle;
+}
+.data-table tr:last-child td {
+  border-bottom: none;
+}
+.data-table tbody tr {
+  transition: background 0.12s var(--ease);
+}
+.data-table tbody tr:hover {
+  background: var(--color-surface);
+}
+.data-table .mono {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.82em;
+  color: var(--color-text-muted);
+}
+
+/* Wrap a table in this for the rounded, bordered card treatment. */
+.table-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--color-card);
+}
+.table-card .data-table th {
+  padding-top: var(--space-3);
+  background: var(--color-surface);
+}
+
+/* ---------- Console page header (shared <PageHeader/> primitive) ---------- */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+}
+.page-header__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  flex-shrink: 0;
+  margin-bottom: var(--space-3);
+}
+.page-header__title {
+  margin: 0 0 var(--space-2);
+}
+.page-header__intro {
+  color: var(--color-text-muted);
+  margin: 0;
+  max-width: 60ch;
+}
+.page-header__actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* ---------- Empty-state block (consistent voice across surfaces) ---------- */
+.empty-state {
+  text-align: center;
+  padding: var(--space-8) var(--space-5);
+  color: var(--color-text-muted);
+}
+.empty-state__icon {
+  display: inline-flex;
+  color: var(--color-text-faint);
+  margin-bottom: var(--space-3);
+}
+.empty-state h3 {
+  font-size: var(--fs-h3);
+  margin: 0 0 var(--space-1);
+}
+.empty-state p {
+  margin: 0 auto var(--space-4);
+  max-width: 42ch;
+  font-size: var(--fs-sm);
+}
+
+/* ---------- Inline flash (shared success/error feedback) ---------- */
+.flash {
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--fs-sm);
+  border: 1px solid transparent;
+}
+.flash-ok {
+  background: var(--color-online-soft);
+  color: var(--color-online);
+  border-color: color-mix(in srgb, var(--color-online) 22%, transparent);
+}
+.flash-error {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+  border-color: color-mix(in srgb, var(--color-danger) 22%, transparent);
+}
+

@@ -36,6 +36,10 @@ export async function createKey(formData: FormData): Promise<void> {
     .map(String)
     .filter((s) => (ALL_SCOPES as readonly string[]).includes(s));
 
+  // A key with zero scopes can't do anything — fall back to the public read
+  // scope so minting always yields a usable key (the picker hints at this).
+  if (scopes.length === 0) scopes.push("directory:read");
+
   const { plaintext } = await createApiKey({
     organizationId,
     name,

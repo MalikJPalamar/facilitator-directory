@@ -39,7 +39,6 @@ export default async function AdminLayout({
     { href: "/admin/webhooks", label: "Webhooks" },
     { href: "/admin/roster", label: "Roster" },
     { href: "/admin/settings", label: "Branding" },
-    { href: "/admin/keys", label: "API keys" },
   ];
   if (isSuperadmin(ctx)) {
     navItems.push({ href: "/superadmin", label: "Superadmin", external: true });

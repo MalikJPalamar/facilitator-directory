@@ -2,7 +2,6 @@ import { getPlatformStats, listAllSchools } from "@directory/core";
 import {
   Bot,
   Building2,
-  ChevronRight,
   Eye,
   GraduationCap,
   MousePointerClick,
@@ -13,7 +12,9 @@ import {
 import { redirect } from "next/navigation";
 
 import { getAuthContext, isSuperadmin } from "../../lib/auth-session.ts";
-import { LogoutButton } from "../logout-button.tsx";
+import { PageHeader } from "../admin/_components/PageHeader.tsx";
+import { SuperadminBar } from "./_bar.tsx";
+import { SchoolsList } from "./_schools.tsx";
 import { Stat } from "./_stat.tsx";
 import styles from "./superadmin.module.css";
 
@@ -38,30 +39,22 @@ export default async function SuperadminPage() {
 
   return (
     <div className="page">
-      <div className="page-bar">
-        <a href="/">← Home</a>
-        <span
-          className="muted"
-          style={{
-            fontSize: "var(--fs-sm)",
-            display: "inline-flex",
-            gap: "var(--space-3)",
-            alignItems: "center",
-          }}
-        >
-          {ctx.name} (superadmin) <LogoutButton />
-        </span>
-      </div>
+      <SuperadminBar name={ctx.name} backHref="/" backLabel="← Home" />
 
-      <span className="eyebrow">Platform console</span>
-      <h1 style={{ marginTop: 0 }}>Operator overview</h1>
-      <p className="muted" style={{ marginTop: 0 }}>
-        Read-only. Platform totals and the trailing {stats.windowDays}-day
-        activity across every tenant.
-      </p>
+      <PageHeader
+        eyebrow="Platform"
+        title="Platform overview"
+        icon={<Building2 />}
+        intro={
+          <>
+            Read-only. Platform totals and the trailing {stats.windowDays}-day
+            activity across every tenant.
+          </>
+        }
+      />
 
       {/* ---- Metrics band: platform totals ---- */}
-      <div className={styles.statGrid}>
+      <div className={styles.statGrid} style={{ marginTop: "var(--space-6)" }}>
         <Stat
           icon={Building2}
           label="Schools"
@@ -116,56 +109,8 @@ export default async function SuperadminPage() {
         />
       </div>
 
-      {/* ---- Schools ---- */}
-      <div className={styles.sectionHead}>
-        <h2>Schools</h2>
-        <span className="results-count" style={{ margin: 0 }}>
-          {schools.length} total
-        </span>
-      </div>
-
-      {schools.length === 0 ? (
-        <div className="panel">
-          <p className="muted" style={{ margin: 0 }}>
-            No schools yet.
-          </p>
-        </div>
-      ) : (
-        <div className={styles.schoolGrid}>
-          {schools.map((s) => {
-            const paying =
-              s.subscriptionStatus === "active" ||
-              s.subscriptionStatus === "trialing";
-            return (
-              <a
-                key={s.id}
-                href={`/superadmin/${s.id}`}
-                className={styles.schoolCard}
-              >
-                <span className={styles.schoolMain}>
-                  <span className={styles.schoolName}>{s.name}</span>
-                  <span className={styles.schoolSlug}>/{s.slug}</span>
-                  <span className={styles.schoolMeta}>
-                    {s.memberCount.toLocaleString()} member
-                    {s.memberCount === 1 ? "" : "s"} ·{" "}
-                    {s.graduateCount.toLocaleString()} grad
-                    {s.graduateCount === 1 ? "" : "s"} · created{" "}
-                    {new Date(s.createdAt).toLocaleDateString()}
-                  </span>
-                </span>
-                <span className={styles.schoolRight}>
-                  <span
-                    className={`badge ${paying ? "badge-online" : "pill-static"}`}
-                  >
-                    {s.subscriptionStatus ?? "none"}
-                  </span>
-                  <ChevronRight size={18} className={styles.chevron} aria-hidden />
-                </span>
-              </a>
-            );
-          })}
-        </div>
-      )}
+      {/* ---- Schools (client-side name/slug filter) ---- */}
+      <SchoolsList schools={schools} />
     </div>
   );
 }
