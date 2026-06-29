@@ -1,0 +1,317 @@
+/*
+ * Superadmin platform console — co-located layout for the operator cockpit.
+ * Builds on the global "Aperture" design system (panels, badges, ink/accent
+ * tokens) and only adds the stat grid + drill-down scaffolding. No global
+ * overrides live here.
+ */
+
+/* ---------- METRICS BAND ---------- */
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4);
+}
+@media (max-width: 900px) {
+  .statGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 480px) {
+  .statGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* A single stat card. `.stat--lead` lifts the agents-as-customers metrics. */
+.stat {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.stat--lead {
+  border-color: var(--color-accent-ring);
+  background: linear-gradient(180deg, var(--color-accent-soft), var(--color-card) 64%);
+}
+
+.statHead {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.stat--lead .statHead {
+  color: var(--color-accent-hover);
+}
+.statHead svg {
+  width: 15px;
+  height: 15px;
+}
+
+.statValue {
+  font-size: clamp(1.9rem, 3.4vw, 2.5rem);
+  font-weight: 680;
+  letter-spacing: var(--tracking-tighter);
+  line-height: 1.02;
+  color: var(--color-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.statHint {
+  font-size: var(--fs-xs);
+  color: var(--color-text-faint);
+  line-height: 1.4;
+}
+
+/* Section eyebrow with a count on the right. */
+.sectionHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: var(--space-10) 0 var(--space-4);
+}
+.sectionHead h2 {
+  font-size: var(--fs-h3);
+  margin: 0;
+}
+
+/* Window label pill for the trailing-activity band. */
+.windowNote {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--color-text-faint);
+}
+
+/* ---------- SCHOOLS LIST ---------- */
+.schoolGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-4);
+}
+@media (max-width: 760px) {
+  .schoolGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* A school row rendered as a quiet, hoverable card linking to the drill-down. */
+.schoolCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-5);
+  color: inherit;
+  transition: transform 0.24s var(--ease-out), box-shadow 0.24s var(--ease-out),
+    border-color 0.24s var(--ease);
+}
+.schoolCard:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow);
+  border-color: var(--color-border-strong);
+  text-decoration: none;
+  color: inherit;
+}
+.schoolMain {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.schoolName {
+  font-size: var(--fs-h3);
+  font-weight: 650;
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-ink);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.schoolSlug {
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+.schoolMeta {
+  font-size: var(--fs-xs);
+  color: var(--color-text-faint);
+}
+.schoolRight {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-shrink: 0;
+}
+.schoolCounts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.chevron {
+  color: var(--color-text-faint);
+  flex-shrink: 0;
+}
+.schoolCard:hover .chevron {
+  color: var(--color-accent);
+}
+
+/* slug link that overrides the card's inherited ink colour */
+.slugLink {
+  color: var(--color-accent);
+}
+
+/* ---------- DRILL-DOWN ---------- */
+.detailGrid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--space-5);
+  align-items: start;
+}
+@media (max-width: 860px) {
+  .detailGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Compact key/value rows inside a panel (subscription, counts). */
+.kv {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.kv:last-child {
+  border-bottom: none;
+}
+.kvKey {
+  color: var(--color-text-muted);
+  font-size: var(--fs-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.kvKey svg {
+  width: 15px;
+  height: 15px;
+  color: var(--color-text-faint);
+}
+.kvVal {
+  font-weight: 600;
+  color: var(--color-ink);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* Members table. */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+}
+.table th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0 var(--space-3) var(--space-2);
+  border-bottom: 1px solid var(--color-border-strong);
+}
+.table td {
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  vertical-align: middle;
+}
+.table tr:last-child td {
+  border-bottom: none;
+}
+.table td.email {
+  color: var(--color-text-muted);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: var(--fs-xs);
+}
+
+/* Small role tag inside the members table. */
+.roleTag {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+}
+
+/* A 4-up mini-stat strip used for the 30d recent activity in the drill-down. */
+.miniGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-3);
+}
+@media (max-width: 620px) {
+  .miniGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.mini {
+  background: var(--color-surface);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.miniValue {
+  font-size: 1.5rem;
+  font-weight: 680;
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-ink);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.miniLabel {
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.miniLabel svg {
+  width: 13px;
+  height: 13px;
+  color: var(--color-text-faint);
+}
+
+/* Accent dot before a theme color swatch. */
+.swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid var(--hairline);
+  display: inline-block;
+}

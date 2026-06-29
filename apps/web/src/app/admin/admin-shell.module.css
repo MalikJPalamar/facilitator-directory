@@ -1,0 +1,247 @@
+/*
+ * Admin "control center" shell. Nests INSIDE the global site header/footer
+ * rendered by the root layout — so this provides only the dashboard chrome:
+ * a sticky sub-nav bar + a generous max-width content container that every
+ * /admin/* page renders into. All colors key off the global design tokens so
+ * the shell stays consistent without touching globals.css.
+ */
+
+.shell {
+  width: 100%;
+}
+
+/* ---------- Sub-nav bar (below the global header) ---------- */
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: color-mix(in srgb, var(--color-bg) 88%, transparent);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.barInner {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: var(--space-3) var(--space-5);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.brandName {
+  font-weight: 650;
+  letter-spacing: var(--tracking-tight);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 16rem;
+}
+
+.brandKicker {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+}
+
+.identity {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+}
+
+.role {
+  text-transform: capitalize;
+}
+
+/* ---------- Nav links ---------- */
+.nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+}
+
+.navLink {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-sm);
+  font-weight: 550;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.navLink:hover {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.navLinkActive {
+  background: var(--color-ink);
+  color: var(--color-text-invert);
+}
+
+.navLinkActive:hover {
+  background: var(--color-ink);
+  color: var(--color-text-invert);
+}
+
+.navLinkAccent {
+  color: var(--color-accent);
+}
+
+.navLinkAccent:hover {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-hover);
+}
+
+/* The nav lives on its own row beneath the brand/identity on the bar. */
+.navRow {
+  border-top: 1px solid var(--hairline);
+  background: var(--color-bg);
+}
+
+.navRowInner {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: var(--space-2) var(--space-5);
+  overflow-x: auto;
+}
+
+/* ---------- Content container ---------- */
+.content {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: var(--space-7) var(--space-5) var(--space-12);
+}
+
+/* ---------- Overview-specific bits ---------- */
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+@media (max-width: 860px) {
+  .statGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 460px) {
+  .statGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stat {
+  padding: var(--space-5);
+}
+
+.statLabel {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+  margin: 0;
+}
+
+.statValue {
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  font-weight: 700;
+  letter-spacing: var(--tracking-tight);
+  line-height: 1.05;
+  margin: var(--space-2) 0 0;
+}
+
+.statHint {
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+  margin: var(--space-1) 0 0;
+}
+
+.quickActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+/* ---------- Roster table ---------- */
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+}
+
+.table th {
+  text-align: left;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+  padding: 0 var(--space-3) var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.table td {
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--hairline);
+  vertical-align: middle;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.tableActions {
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.codeArea {
+  width: 100%;
+  min-height: 12rem;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-card);
+  color: var(--color-text);
+  resize: vertical;
+}
+
+.codeArea:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-ring);
+}

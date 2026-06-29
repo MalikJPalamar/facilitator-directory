@@ -6,7 +6,7 @@ import {
 } from "node:crypto";
 
 import type { WebhookEvent } from "@directory/contracts";
-import { and, db, eq, inArray, sql, tables } from "@directory/db";
+import { and, db, desc, eq, inArray, sql, tables } from "@directory/db";
 
 import { assertPublicHttpsUrl } from "./net-guard.ts";
 
@@ -350,4 +350,83 @@ export async function deleteWebhookEndpoint(
     )
     .returning({ id: tables.webhookEndpoint.id });
   return rows.length > 0;
+}
+
+// ── Delivery log + test send (admin console) ────────────────────────────────────
+
+export type WebhookDeliveryRow = {
+  id: string;
+  endpointId: string;
+  eventType: string;
+  status: string;
+  attempts: number;
+  lastStatusCode: number | null;
+  lastError: string | null;
+  createdAt: Date;
+};
+
+/** Recent delivery attempts for a school, newest first (admin observability). */
+export async function listWebhookDeliveries(
+  organizationId: string,
+  limit = 20,
+): Promise<WebhookDeliveryRow[]> {
+  return db
+    .select({
+      id: tables.webhookDelivery.id,
+      endpointId: tables.webhookDelivery.endpointId,
+      eventType: tables.webhookDelivery.eventType,
+      status: tables.webhookDelivery.status,
+      attempts: tables.webhookDelivery.attempts,
+      lastStatusCode: tables.webhookDelivery.lastStatusCode,
+      lastError: tables.webhookDelivery.lastError,
+      createdAt: tables.webhookDelivery.createdAt,
+    })
+    .from(tables.webhookDelivery)
+    .where(eq(tables.webhookDelivery.organizationId, organizationId))
+    .orderBy(desc(tables.webhookDelivery.createdAt))
+    .limit(limit);
+}
+
+/**
+ * Fire a synthetic `directory.test` event at ONE of the school's endpoints so an
+ * admin can confirm their CRM is wired up. Org-scoped lookup (can't target
+ * another tenant's endpoint), then the standard signed delivery + retry path.
+ */
+export async function sendTestWebhook(
+  organizationId: string,
+  endpointId: string,
+): Promise<{ ok: boolean; deliveryId?: string }> {
+  const [ep] = await db
+    .select({ id: tables.webhookEndpoint.id })
+    .from(tables.webhookEndpoint)
+    .where(
+      and(
+        eq(tables.webhookEndpoint.id, endpointId),
+        eq(tables.webhookEndpoint.organizationId, organizationId),
+      ),
+    )
+    .limit(1);
+  if (!ep) return { ok: false };
+
+  const eventId = randomUUID();
+  const payload = {
+    id: eventId,
+    type: "directory.test",
+    occurredAt: new Date().toISOString(),
+    organizationId,
+    data: { message: "Test event from The Directory — your endpoint is reachable." },
+  };
+  const [row] = await db
+    .insert(tables.webhookDelivery)
+    .values({
+      organizationId,
+      endpointId: ep.id,
+      eventId,
+      eventType: "directory.test",
+      payload,
+    })
+    .returning({ id: tables.webhookDelivery.id });
+  if (!row) return { ok: false };
+  await deliverOne(row.id);
+  return { ok: true, deliveryId: row.id };
 }

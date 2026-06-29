@@ -1,0 +1,380 @@
+/*
+ * Developers / Connect hub — bespoke layout that sits on top of the global
+ * "Aperture" design system (.panel, .btn, .badge, .chip, .pill-static …). Only
+ * structure + a few accent affordances live here; colours/spacing reuse tokens.
+ */
+
+.hub {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-7);
+}
+
+/* ---- Hero ---- */
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.heroIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: var(--radius);
+  background: var(--color-accent-soft);
+  color: var(--color-accent-hover);
+  margin-bottom: var(--space-2);
+}
+.heroTitle {
+  margin: 0;
+  font-size: var(--fs-h2);
+}
+.heroLead {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: clamp(1rem, 1.4vw, 1.15rem);
+  max-width: 60ch;
+}
+
+/* ---- Sticky in-page nav ---- */
+.nav {
+  position: sticky;
+  top: var(--space-3);
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border);
+  background: rgba(251, 251, 253, 0.82);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  box-shadow: var(--shadow-sm);
+}
+.navLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: var(--fs-sm);
+  font-weight: 550;
+  color: var(--color-text);
+  padding: 7px 14px;
+  border-radius: var(--radius-pill);
+  transition: background 0.15s var(--ease), color 0.15s var(--ease);
+}
+.navLink:hover {
+  background: var(--color-surface);
+  color: var(--color-accent-hover);
+}
+
+/* ---- Section heading ---- */
+.section {
+  scroll-margin-top: 84px;
+}
+.sectionHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+.sectionHead h2 {
+  margin: 0;
+  font-size: var(--fs-h2);
+}
+.sectionIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  border: 1px solid var(--color-border);
+}
+.sectionSub {
+  margin: calc(-1 * var(--space-2)) 0 var(--space-5);
+  color: var(--color-text-muted);
+  max-width: 64ch;
+}
+
+/* ---- Connection essentials grid ---- */
+.essentials {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+.essential {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-card);
+}
+.essentialLabel {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+}
+.essentialValue {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.essentialValue code {
+  font-size: var(--fs-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.essentialLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* ---- Auth callout ---- */
+.authNote {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: var(--space-4);
+  border-radius: var(--radius);
+  background: var(--color-accent-soft);
+  color: var(--color-accent-hover);
+  border: 1px solid var(--color-accent-ring);
+}
+.authNote p {
+  margin: 0;
+  font-size: var(--fs-sm);
+  line-height: 1.55;
+  color: var(--color-ink-soft);
+}
+.authNote code {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+/* ---- Reveal-once / status banners ---- */
+.revealBanner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  border: 1px solid var(--color-accent);
+  border-left-width: 3px;
+  border-radius: var(--radius);
+  background: var(--color-card);
+  padding: var(--space-4);
+}
+.revealRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.revealKey {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: var(--fs-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* ---- Scope picker ---- */
+.scopeGrid {
+  display: grid;
+  gap: var(--space-2);
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+.scope {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-card);
+  cursor: pointer;
+  transition: border-color 0.15s var(--ease), background 0.15s var(--ease);
+}
+.scope:hover {
+  border-color: var(--color-border-strong);
+  background: var(--color-surface);
+}
+.scope input {
+  margin-top: 3px;
+  accent-color: var(--color-accent);
+}
+.scopeText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.scopeText code {
+  font-size: var(--fs-sm);
+}
+.scopeHelp {
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+/* ---- Keys table ---- */
+.tableWrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+}
+.table th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+.table td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+.table tr:last-child td {
+  border-bottom: none;
+}
+.rowRevoked {
+  opacity: 0.5;
+}
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.scopeChip {
+  font-size: var(--fs-xs);
+  font-weight: 550;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+/* ---- MCP tool list ---- */
+.toolGrid {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+.tool {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-card);
+}
+.toolName {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--color-ink);
+}
+.toolDesc {
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+  line-height: 1.45;
+  margin: 0;
+}
+.toolAuth {
+  margin-top: 2px;
+}
+
+/* ---- Steps (CLI) ---- */
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+.step {
+  display: flex;
+  gap: var(--space-4);
+}
+.stepNum {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-pill);
+  background: var(--color-ink);
+  color: #fff;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.stepBody {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.stepBody p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--fs-sm);
+}
+
+/* ---- Code sample tabs (label + block) ---- */
+.samples {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+.sample {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.sampleHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.sampleHead h3 {
+  margin: 0;
+  font-size: var(--fs-h3);
+}
+
+@media (max-width: 560px) {
+  .nav {
+    border-radius: var(--radius);
+  }
+}

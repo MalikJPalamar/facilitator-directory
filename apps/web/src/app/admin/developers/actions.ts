@@ -6,6 +6,11 @@ import { redirect } from "next/navigation";
 
 import { getAuthContext } from "../../../lib/auth-session.ts";
 
+/**
+ * Owner/admin guard for the key actions. The Connect hub mints org-scoped Bearer
+ * keys, so the same gate as the page applies; we surface the org + the minting
+ * user so created keys carry attribution.
+ */
 async function requireAdminOrg(): Promise<{
   organizationId: string;
   userId: string;
@@ -18,9 +23,10 @@ async function requireAdminOrg(): Promise<{
 }
 
 /**
- * Mint an org-scoped API key. The plaintext is returned via the URL ONCE (the
- * same reveal-once pattern as claim links) — it is never stored and can't be
- * recovered. Only the requested, known scopes are granted.
+ * Mint an org-scoped API key from the Connect hub. The plaintext is returned via
+ * the URL ONCE (the same reveal-once pattern as claim links) — it is never stored
+ * and can't be recovered. Only the requested, known scopes are granted. We land
+ * back on the #keys section so the reveal banner is in view.
  */
 export async function createKey(formData: FormData): Promise<void> {
   const { organizationId, userId } = await requireAdminOrg();
@@ -36,11 +42,11 @@ export async function createKey(formData: FormData): Promise<void> {
     scopes,
     createdByUserId: userId,
   });
-  redirect(`/admin/keys?new=${encodeURIComponent(plaintext)}`);
+  redirect(`/admin/developers?new=${encodeURIComponent(plaintext)}#keys`);
 }
 
 export async function revokeKey(formData: FormData): Promise<void> {
   const { organizationId } = await requireAdminOrg();
   await revokeApiKey(organizationId, String(formData.get("keyId") ?? ""));
-  redirect("/admin/keys?revoked=1");
+  redirect("/admin/developers?revoked=1#keys");
 }

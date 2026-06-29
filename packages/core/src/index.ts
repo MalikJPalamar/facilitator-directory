@@ -66,9 +66,19 @@ export {
   setWebhookEndpointEnabled,
   rotateWebhookSecret,
   deleteWebhookEndpoint,
+  listWebhookDeliveries,
+  sendTestWebhook,
   BlockedUrlError,
   type WebhookEndpointRow,
+  type WebhookDeliveryRow,
 } from "./webhooks.ts";
+export {
+  getPlatformStats,
+  getSchoolDetail,
+  type PlatformStats,
+  type SchoolDetail,
+  type SchoolMember,
+} from "./platform.ts";
 export { assertPublicHttpsUrl, isBlockedAddress } from "./net-guard.ts";
 export { createLead, listLeads, LeadError } from "./leads.ts";
 export { importRoster } from "./roster.ts";
