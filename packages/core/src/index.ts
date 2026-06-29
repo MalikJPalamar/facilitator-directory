@@ -43,7 +43,9 @@ export { sendEmail, sendClaimInvite, schoolNameForOrg } from "./email.ts";
 export {
   getOrganizationBranding,
   updateOrganizationBranding,
+  listAllSchools,
   type OrgBranding,
+  type SchoolSummary,
 } from "./organizations.ts";
 export {
   createApiKey,

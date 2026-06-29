@@ -1,4 +1,70 @@
-import { db, eq, tables } from "@directory/db";
+import { db, desc, eq, sql, tables } from "@directory/db";
+
+/** A platform-wide school summary row for the read-only superadmin overview. */
+export type SchoolSummary = {
+  id: string;
+  name: string;
+  slug: string;
+  createdAt: Date;
+  memberCount: number;
+  graduateCount: number;
+  subscriptionStatus: string;
+};
+
+/**
+ * Every school on the platform with basic counts — for the read-only superadmin
+ * overview only. Cross-tenant by design (it is NOT scoped to one org), so it
+ * must only ever be called behind the SUPERADMIN_EMAILS allow-list. Counts are
+ * computed with correlated sub-selects to keep this a single round-trip.
+ */
+export async function listAllSchools(): Promise<SchoolSummary[]> {
+  // Base list of schools + their subscription status (LEFT JOIN: subscription is
+  // 1:1 with org via the unique organization_id, so this can't fan out rows).
+  const base = await db
+    .select({
+      id: tables.organization.id,
+      name: tables.organization.name,
+      slug: tables.organization.slug,
+      createdAt: tables.organization.createdAt,
+      subscriptionStatus: tables.subscription.status,
+    })
+    .from(tables.organization)
+    .leftJoin(
+      tables.subscription,
+      eq(tables.subscription.organizationId, tables.organization.id),
+    )
+    .orderBy(desc(tables.organization.createdAt));
+
+  // Counts are grouped separately (rather than joined together) so member and
+  // graduate joins can't multiply each other into inflated counts.
+  const memberCounts = await db
+    .select({
+      organizationId: tables.member.organizationId,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(tables.member)
+    .groupBy(tables.member.organizationId);
+  const gradCounts = await db
+    .select({
+      organizationId: tables.graduateProfile.organizationId,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(tables.graduateProfile)
+    .groupBy(tables.graduateProfile.organizationId);
+
+  const memberBy = new Map(memberCounts.map((r) => [r.organizationId, Number(r.count)]));
+  const gradBy = new Map(gradCounts.map((r) => [r.organizationId, Number(r.count)]));
+
+  return base.map((r) => ({
+    id: r.id,
+    name: r.name,
+    slug: r.slug,
+    createdAt: r.createdAt,
+    memberCount: memberBy.get(r.id) ?? 0,
+    graduateCount: gradBy.get(r.id) ?? 0,
+    subscriptionStatus: r.subscriptionStatus ?? "none",
+  }));
+}
 
 /** The branding fields an owner/admin can edit for their school. */
 export type OrgBranding = {

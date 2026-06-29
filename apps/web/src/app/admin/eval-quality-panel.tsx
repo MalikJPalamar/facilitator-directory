@@ -8,7 +8,16 @@ import { listRecentEvalRuns } from "@directory/core";
  * deterministic fallback isn't mistaken for a validated Claude path.
  */
 export async function EvalQualityPanel() {
-  const runs = await listRecentEvalRuns(10);
+  // This is a non-critical at-a-glance widget. It must never take down the whole
+  // /admin page: if the eval_run table is unreachable (e.g. a deploy whose DB
+  // migrations haven't run yet), degrade to the empty state instead of throwing
+  // a server-side exception for the entire route.
+  let runs: Awaited<ReturnType<typeof listRecentEvalRuns>> = [];
+  try {
+    runs = await listRecentEvalRuns(10);
+  } catch {
+    runs = [];
+  }
 
   if (runs.length === 0) {
     return (

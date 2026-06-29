@@ -46,3 +46,27 @@ export async function graduateProfileIdFor(
   const profile = await graduateProfileForMember(ctx.memberId);
   return profile?.id ?? null;
 }
+
+/**
+ * Parse SUPERADMIN_EMAILS once into a lowercased set. Platform superadmin is a
+ * deliberately minimal, env-gated capability (no DB role, no UI to grant it):
+ * an operator lists trusted emails and only those get the cross-tenant
+ * /superadmin overview. Empty/unset ⇒ nobody is a superadmin.
+ */
+const SUPERADMIN_EMAILS: ReadonlySet<string> = new Set(
+  (process.env.SUPERADMIN_EMAILS ?? "")
+    .split(",")
+    .map((e: string) => e.trim().toLowerCase())
+    .filter(Boolean),
+);
+
+/** Whether a given email is on the platform superadmin allow-list. */
+export function isSuperadminEmail(email: string | null | undefined): boolean {
+  if (!email) return false;
+  return SUPERADMIN_EMAILS.has(email.trim().toLowerCase());
+}
+
+/** Whether the signed-in user is a platform superadmin (allow-list gated). */
+export function isSuperadmin(ctx: AuthContext | null): boolean {
+  return isSuperadminEmail(ctx?.email);
+}

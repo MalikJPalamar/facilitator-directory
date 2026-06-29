@@ -1,0 +1,260 @@
+/*
+ * Homepage-only styles. Co-located CSS Module — globals.css owns the design
+ * tokens & shared classes; this file only adds bespoke composition the
+ * marketing page needs. Everything keys off the existing tokens.
+ */
+
+/* ---------- HERO ---------- */
+.hero {
+  position: relative;
+  text-align: center;
+  padding: var(--space-16) 0 var(--space-12);
+  background:
+    radial-gradient(1100px 460px at 50% -12%, var(--color-accent-soft), transparent 70%),
+    var(--color-bg);
+  overflow: hidden;
+}
+
+.heroInner {
+  max-width: 56rem;
+  margin: 0 auto;
+}
+
+.heroTitle {
+  margin: 0 auto var(--space-5);
+  max-width: 18ch;
+}
+
+.heroLead {
+  margin: 0 auto var(--space-7);
+  max-width: 52ch;
+  text-align: center;
+}
+
+.heroActions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: var(--space-5);
+}
+
+.trustLine {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: var(--fs-sm);
+  color: var(--color-text-faint);
+}
+
+.trustLine svg {
+  color: var(--color-accent);
+}
+
+/* ---------- STAT / TRUST STRIP ---------- */
+.statStrip {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-top: var(--space-8);
+}
+
+.statStrip .pillIcon {
+  color: var(--color-accent);
+}
+
+/* ---------- SECTION HEADERS ---------- */
+.sectionHead {
+  max-width: 46rem;
+  margin: 0 auto var(--space-10);
+  text-align: center;
+}
+
+.sectionHead h2 {
+  font-size: var(--fs-h2);
+  letter-spacing: var(--tracking-tighter);
+  margin: 0 0 var(--space-3);
+}
+
+.sectionHead p {
+  color: var(--color-text-muted);
+  font-size: clamp(1rem, 1.4vw, 1.1875rem);
+  margin: 0 auto;
+  max-width: 44ch;
+}
+
+/* surface-tinted section to break the rhythm, kept very soft */
+.tinted {
+  background: var(--color-surface);
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+}
+
+/* ---------- HOW IT WORKS (numbered steps) ---------- */
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-6);
+  counter-reset: step;
+}
+
+@media (max-width: 768px) {
+  .steps {
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
+  }
+}
+
+.step {
+  position: relative;
+  padding-top: var(--space-6);
+}
+
+.stepNum {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-pill);
+  background: var(--color-ink);
+  color: #fff;
+  font-size: var(--fs-body);
+  font-weight: 650;
+  letter-spacing: var(--tracking-tight);
+  margin-bottom: var(--space-4);
+}
+
+.step h3 {
+  font-size: var(--fs-h3);
+  margin: 0 0 var(--space-2);
+}
+
+.step p {
+  color: var(--color-text-muted);
+  font-size: var(--fs-sm);
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* ---------- SPLIT MINI SECTIONS (practitioners / agents) ---------- */
+.split {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-5);
+}
+
+@media (max-width: 768px) {
+  .split {
+    grid-template-columns: 1fr;
+  }
+}
+
+.splitCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  height: 100%;
+}
+
+.splitCard .eyebrowRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--color-accent);
+}
+
+.splitCard h3 {
+  font-size: var(--fs-h3);
+  margin: 0;
+}
+
+.splitCard p {
+  color: var(--color-text-muted);
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.splitCard .splitLink {
+  margin-top: auto;
+  padding-top: var(--space-3);
+  font-size: var(--fs-sm);
+  font-weight: 590;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.codeLine {
+  display: inline-block;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 4px 10px;
+  margin-top: var(--space-2);
+  align-self: flex-start;
+}
+
+/* ---------- FINAL CTA BAND ---------- */
+.ctaBand {
+  position: relative;
+  margin: var(--space-12) auto 0;
+  max-width: var(--container);
+  border-radius: var(--radius-xl);
+  background:
+    radial-gradient(700px 320px at 50% 0%, rgba(31, 122, 140, 0.55), transparent 70%),
+    var(--color-ink);
+  color: #fff;
+  text-align: center;
+  padding: var(--space-12) var(--space-6);
+  overflow: hidden;
+}
+
+.ctaBand h2 {
+  color: #fff;
+  font-size: var(--fs-h2);
+  letter-spacing: var(--tracking-tighter);
+  margin: 0 auto var(--space-4);
+  max-width: 20ch;
+}
+
+.ctaBand p {
+  color: rgba(255, 255, 255, 0.74);
+  font-size: clamp(1rem, 1.4vw, 1.1875rem);
+  margin: 0 auto var(--space-7);
+  max-width: 44ch;
+}
+
+.ctaActions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.ctaBand .btnInvert {
+  background: #fff;
+  color: var(--color-ink);
+}
+
+.ctaBand .btnInvert:hover {
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--color-ink);
+}
+
+.ctaBand .btnGhostInvert {
+  background: transparent;
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.ctaBand .btnGhostInvert:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.55);
+}
