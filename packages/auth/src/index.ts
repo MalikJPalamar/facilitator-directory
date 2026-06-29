@@ -34,8 +34,15 @@ export const auth = betterAuth({
   emailAndPassword: { enabled: true },
   plugins: [
     organization({
-      // Roles within a school.
-      roles: ["owner", "admin", "graduate"] as unknown as never,
+      // Roles within a school are stored as the plain `member.role` string
+      // ("owner" | "admin" | "graduate") and read directly by membershipForUser —
+      // we never go through Better Auth's access-control `hasPermission` path, so
+      // there are no custom Role objects to register. The org *creator* gets
+      // "owner"; "admin"/"graduate" rows are written by the roster + claim flows.
+      // (The previous `roles: [...] as unknown as never` was the wrong shape for
+      // this version's `roles` option — a Record<string, Role>, not a string[] —
+      // and is intentionally removed.)
+      creatorRole: "owner",
       organizationHooks: {
         /**
          * Mirror a default subscription row the moment a school is created, so

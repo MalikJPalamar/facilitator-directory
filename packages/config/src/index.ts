@@ -55,6 +55,10 @@ const EnvSchema = z.object({
   BETTER_AUTH_SECRET: z.string().default("dev-insecure-secret-change-me"),
   BETTER_AUTH_URL: z.string().default("http://localhost:3000"),
 
+  // Platform superadmin allow-list — comma-separated emails granted read-only
+  // access to /superadmin (cross-tenant org overview). Empty/unset = nobody.
+  SUPERADMIN_EMAILS: z.string().optional(),
+
   // AI (Claude)
   ANTHROPIC_API_KEY: z.string().optional(),
 

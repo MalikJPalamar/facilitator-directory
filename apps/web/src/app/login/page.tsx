@@ -1,13 +1,18 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 
 import { signIn, signUp } from "../../lib/auth-client.ts";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const searchParams = useSearchParams();
+  // Open in signup mode when linked as /login?mode=signup (e.g. "Create your
+  // school" CTAs); default to signin otherwise.
+  const initialMode =
+    searchParams.get("mode") === "signup" ? "signup" : "signin";
+  const [mode, setMode] = useState<"signin" | "signup">(initialMode);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,7 +34,7 @@ export default function LoginPage() {
     }
     // Honour ?next= (claim links send signed-out users here first), but only a
     // same-origin relative path — never an absolute/protocol-relative redirect.
-    const next = new URLSearchParams(window.location.search).get("next");
+    const next = searchParams.get("next");
     const dest =
       next && next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
     router.push(dest);
@@ -77,5 +82,24 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+/**
+ * useSearchParams() requires a Suspense boundary in the App Router, so the
+ * client form lives in LoginForm and the page wraps it. The fallback mirrors the
+ * panel shell so there's no layout shift before the params resolve.
+ */
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="page" style={{ maxWidth: 440 }}>
+          <div className="panel" />
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }
