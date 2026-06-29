@@ -44,6 +44,9 @@ function slugify(s: string): string {
  * (name-only rows) just works.
  */
 function parseRoster(raw: string): RosterFacilitator[] {
+  // Bound the work: normalize/validate/embed runs per row, so cap the count
+  // BEFORE mapping (a 50k-row paste shouldn't be fully processed then rejected).
+  const MAX_ROSTER_ROWS = 500;
   const text = raw.trim();
   if (!text) return [];
 
@@ -55,6 +58,9 @@ function parseRoster(raw: string): RosterFacilitator[] {
       : Array.isArray((parsed as { facilitators?: unknown }).facilitators)
         ? ((parsed as { facilitators: unknown[] }).facilitators)
         : [];
+    if (arr.length > MAX_ROSTER_ROWS) {
+      throw new Error(`Too many rows — max ${MAX_ROSTER_ROWS} per import.`);
+    }
     return arr.map((row) => normalizeRow(row as Record<string, unknown>));
   }
 
@@ -62,6 +68,9 @@ function parseRoster(raw: string): RosterFacilitator[] {
   const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
   if (lines.length < 2) {
     throw new Error("CSV needs a header row plus at least one data row.");
+  }
+  if (lines.length - 1 > MAX_ROSTER_ROWS) {
+    throw new Error(`Too many rows — max ${MAX_ROSTER_ROWS} per import.`);
   }
   const delim = lines[0]!.includes("\t") ? "\t" : ",";
   const header = splitCsvLine(lines[0]!, delim).map((h) => h.trim().toLowerCase());

@@ -8,6 +8,7 @@ import {
 import {
   ClaimError,
   issueClaimToken,
+  listSchoolGraduates,
   schoolNameForOrg,
   sendClaimInvite,
 } from "@directory/core";
@@ -65,6 +66,15 @@ export async function emitClaimLink(formData: FormData): Promise<void> {
   const { organizationId } = await requireAdminOrg();
   const profileId = String(formData.get("profileId") ?? "");
   const email = String(formData.get("email") ?? "").trim();
+
+  // TENANT GUARD (critical): only mint a claim link for one of THIS school's own
+  // profiles. issueClaimToken is NOT org-scoped, so without this an admin of org
+  // A could forge another org's unclaimed profileId and mint a valid claim token
+  // for it — a cross-tenant profile takeover. Mirrors the API route's check.
+  const owned = await listSchoolGraduates(organizationId);
+  if (!owned.some((g) => g.id === profileId)) {
+    redirect("/admin?claim_error=1");
+  }
 
   let token: string;
   let emailParam = "";

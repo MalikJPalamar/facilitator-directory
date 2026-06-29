@@ -235,18 +235,19 @@ export type Lead = z.infer<typeof Lead>;
 // ── Bulk roster import (admin scope) ───────────────────────────────────────────
 
 export const RosterFacilitator = z.object({
-  slug: z.string(),
-  displayName: z.string(),
-  email: z.string().email().optional(),
-  headline: z.string().optional(),
-  bio: z.string().optional(),
-  modalities: z.array(z.string()).optional(),
-  city: z.string().optional(),
-  country: z.string().optional(),
+  // Length caps so a bulk import can't persist unbounded strings into profiles.
+  slug: z.string().min(1).max(80),
+  displayName: z.string().min(1).max(120),
+  email: z.string().email().max(200).optional(),
+  headline: z.string().max(200).optional(),
+  bio: z.string().max(4000).optional(),
+  modalities: z.array(z.string().max(60)).max(20).optional(),
+  city: z.string().max(120).optional(),
+  country: z.string().max(80).optional(),
   lat: z.number().optional(),
   lng: z.number().optional(),
   online: z.boolean().optional(),
-  program: z.string().optional(),
+  program: z.string().max(160).optional(),
 });
 export type RosterFacilitator = z.infer<typeof RosterFacilitator>;
 
