@@ -1,11 +1,17 @@
 import { billingConfigured, getSubscription } from "@directory/billing";
-import { getSchoolMetrics, latestInsightDTO, listSchoolGraduates } from "@directory/core";
+import {
+  getOrganizationBranding,
+  getSchoolMetrics,
+  latestInsightDTO,
+  listSchoolGraduates,
+} from "@directory/core";
 import { ArrowDownRight, ArrowUpRight, LayoutDashboard } from "lucide-react";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { getAuthContext } from "../../lib/auth-session.ts";
 import { InsightPanel } from "../insight-panel.tsx";
+import { OnboardingChecklist } from "./_components/OnboardingChecklist.tsx";
 import { PageHeader } from "./_components/PageHeader.tsx";
 import { openPortal, startCheckout } from "./actions.ts";
 import styles from "./admin-shell.module.css";
@@ -38,13 +44,15 @@ export default async function AdminPage({
   const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   const twoMonthsAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
 
-  const [insight, sub, graduates, metrics, priorMetrics] = await Promise.all([
-    latestInsightDTO(orgId, "school", null),
-    getSubscription(orgId),
-    listSchoolGraduates(orgId),
-    getSchoolMetrics(orgId, monthAgo, now).catch(() => null),
-    getSchoolMetrics(orgId, twoMonthsAgo, monthAgo).catch(() => null),
-  ]);
+  const [insight, sub, graduates, metrics, priorMetrics, branding] =
+    await Promise.all([
+      latestInsightDTO(orgId, "school", null),
+      getSubscription(orgId),
+      listSchoolGraduates(orgId),
+      getSchoolMetrics(orgId, monthAgo, now).catch(() => null),
+      getSchoolMetrics(orgId, twoMonthsAgo, monthAgo).catch(() => null),
+      getOrganizationBranding(orgId).catch(() => null),
+    ]);
 
   const params = await searchParams;
   const { checkout } = params;
@@ -52,6 +60,8 @@ export default async function AdminPage({
 
   const total = graduates.length;
   const published = graduates.filter((g) => g.status === "published").length;
+  // A school counts as "branded" once it sets any of logo / accent / hero copy.
+  const branded = !!(branding?.logo || branding?.heroCopy || branding?.themeColor);
 
   // When analytics is unreachable `metrics` is null — surface that honestly as
   // "no data yet" instead of a misleading 0 over "last 30 days".
@@ -100,6 +110,13 @@ export default async function AdminPage({
         title="School dashboard"
         intro="Your graduates, reach, and AI coaching at a glance."
         icon={<LayoutDashboard size={22} />}
+      />
+
+      <OnboardingChecklist
+        branded={branded}
+        hasFacilitators={total > 0}
+        hasPublished={published > 0}
+        subscriptionActive={active}
       />
 
       {checkout === "success" && (
