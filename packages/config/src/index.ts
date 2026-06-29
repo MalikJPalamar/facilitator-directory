@@ -76,6 +76,9 @@ const EnvSchema = z.object({
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
   STRIPE_PRICE_ID: z.string().optional(),
+  // Set to "true" ONLY after Stripe Tax + an origin address are configured in
+  // the account; otherwise automatic tax throws at checkout. Default: off.
+  STRIPE_AUTOMATIC_TAX: z.string().optional(),
 
   // Email (Resend HTTP API). EMAIL_FROM is like 'The Directory <onboarding@yourdomain>'.
   RESEND_API_KEY: z.string().optional(),

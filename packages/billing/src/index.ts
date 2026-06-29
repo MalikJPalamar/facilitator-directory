@@ -68,7 +68,13 @@ export async function createCheckoutSession(opts: {
     customer_email: opts.customerEmail,
     success_url: opts.successUrl,
     cancel_url: opts.cancelUrl,
-    automatic_tax: { enabled: true },
+    // Tax is OFF unless explicitly enabled. `automatic_tax` requires Stripe Tax
+    // to be active in the account WITH an origin address, and otherwise THROWS
+    // at checkout creation — a classic go-live trap that 500s the "Start
+    // subscription" button. Opt in via STRIPE_AUTOMATIC_TAX=true once Tax is set up.
+    ...(env.STRIPE_AUTOMATIC_TAX === "true"
+      ? { automatic_tax: { enabled: true } }
+      : {}),
     metadata: { organizationId: opts.organizationId },
     // Propagate the tenant onto the subscription so later customer.subscription.*
     // webhook events (which don't carry session metadata) can resolve the org.
